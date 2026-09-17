@@ -1,0 +1,56 @@
+name: Windows package
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-windows:
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
+          modules: 'qtmultimedia qtserialport'
+          cache: true
+
+      - name: Install NSIS
+        run: choco install nsis --no-progress -y
+
+      - name: Configure
+        run: >-
+          cmake -S . -B build
+          -G "Visual Studio 17 2022"
+          -A x64
+          -DCMAKE_PREFIX_PATH="$env:Qt6_DIR"
+          -DCMAKE_INSTALL_PREFIX="${{ github.workspace }}\install"
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Test
+        run: ctest --test-dir build -C Release --output-on-failure
+
+      - name: Package
+        run: cmake --build build --config Release --target package
+
+      - name: Show installer path
+        shell: pwsh
+        run: Get-ChildItem build -Filter *.exe | Select-Object FullName
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: IndigenousGCS-windows-installer
+          path: build/*.exe
+          if-no-files-found: error

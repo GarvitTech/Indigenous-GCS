@@ -1,0 +1,3 @@
+module IndigenousGCS
+singleton Colors 1.0 theme/Colors.qml
+singleton Theme  1.0 theme/Theme.qml

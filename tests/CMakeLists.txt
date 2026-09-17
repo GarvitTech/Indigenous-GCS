@@ -1,0 +1,62 @@
+cmake_minimum_required(VERSION 3.21)
+
+find_package(Qt6 REQUIRED COMPONENTS Test Core Sql)
+
+set(MAVLINK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}")
+set(SRC "${CMAKE_SOURCE_DIR}/src")
+
+# ── test_geo ──────────────────────────────────────────────────────────────────
+qt_add_executable(test_geo
+    test_geo/test_geo.cpp
+    ${SRC}/utils/GeoUtils.cpp
+)
+target_include_directories(test_geo PRIVATE ${SRC} ${MAVLINK_INCLUDE_DIR})
+target_link_libraries(test_geo PRIVATE Qt6::Test Qt6::Core)
+add_test(NAME test_geo COMMAND test_geo)
+
+# ── test_mavlink ──────────────────────────────────────────────────────────────
+qt_add_executable(test_mavlink
+    test_mavlink/test_mavlink.cpp
+)
+target_include_directories(test_mavlink PRIVATE ${SRC} ${MAVLINK_INCLUDE_DIR})
+target_link_libraries(test_mavlink PRIVATE Qt6::Test Qt6::Core)
+add_test(NAME test_mavlink COMMAND test_mavlink)
+
+# ── test_msp ──────────────────────────────────────────────────────────────────
+qt_add_executable(test_msp
+    test_msp/test_msp.cpp
+    ${SRC}/msp/MSPParser.cpp
+)
+target_include_directories(test_msp PRIVATE ${SRC})
+target_link_libraries(test_msp PRIVATE Qt6::Test Qt6::Core)
+add_test(NAME test_msp COMMAND test_msp)
+
+# ── test_mission ──────────────────────────────────────────────────────────────
+qt_add_executable(test_mission
+    test_mission/test_mission.cpp
+    ${SRC}/mission/Mission.cpp
+    ${SRC}/mission/Waypoint.cpp
+    ${SRC}/mission/MissionSerializer.cpp
+)
+target_include_directories(test_mission PRIVATE ${SRC} ${MAVLINK_INCLUDE_DIR})
+target_link_libraries(test_mission PRIVATE Qt6::Test Qt6::Core)
+add_test(NAME test_mission COMMAND test_mission)
+
+# ── test_parameters ───────────────────────────────────────────────────────────
+qt_add_executable(test_parameters
+    test_parameters/test_parameters.cpp
+    ${SRC}/parameters/Parameter.cpp
+)
+target_include_directories(test_parameters PRIVATE ${SRC} ${MAVLINK_INCLUDE_DIR})
+target_link_libraries(test_parameters PRIVATE Qt6::Test Qt6::Core)
+add_test(NAME test_parameters COMMAND test_parameters)
+
+# ── test_vehicle ──────────────────────────────────────────────────────────────
+qt_add_executable(test_vehicle
+    test_vehicle/test_vehicle.cpp
+    ${SRC}/vehicle/FlightModeManager.cpp
+    ${SRC}/vehicle/VehicleState.cpp
+)
+target_include_directories(test_vehicle PRIVATE ${SRC} ${MAVLINK_INCLUDE_DIR})
+target_link_libraries(test_vehicle PRIVATE Qt6::Test Qt6::Core)
+add_test(NAME test_vehicle COMMAND test_vehicle)
