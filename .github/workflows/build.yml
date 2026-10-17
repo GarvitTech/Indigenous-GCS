@@ -198,29 +198,51 @@ jobs:
       - name: Install Qt 6 and build dependencies
         run: |
           sudo apt-get update
-          # Ubuntu 24.04 package names. Note that Qt Location is not packaged
-          # separately: it ships in qt6-positioning-dev together with the
-          # QtPositioning CMake config that QtLocation depends on. There is no
-          # "qt6-location-dev" package, which is why this failed at first.
-          sudo apt-get install -y \
-            cmake ninja-build \
-            qt6-base-dev \
-            qt6-declarative-dev \
-            qt6-positioning-dev \
-            libqt6serialport6-dev \
-            libqt6sql6-sqlite \
-            qt6-tools-dev \
-            qml6-module-qtpositioning \
-            qml6-module-qtlocation \
-            qml6-module-qtquick \
-            qml6-module-qtquick-controls \
-            qml6-module-qtquick-layouts \
-            libgl1-mesa-dev
 
-          # Report what actually got installed, so a future package rename is
-          # obvious from the log rather than surfacing as a CMake error.
-          echo "--- Qt6 CMake configs available ---"
-          find /usr/lib/x86_64-linux-gnu/cmake -maxdepth 1 -name 'Qt6*' -type d 2>/dev/null | sort | head -30
+          # Install each package independently and report any that are missing,
+          # rather than aborting on the first unknown name. Ubuntu's Qt 6
+          # packaging differs between releases and a single renamed package
+          # should not fail the whole job.
+          packages=(
+            cmake ninja-build
+            qt6-base-dev
+            qt6-declarative-dev
+            qt6-positioning-dev
+            libqt6serialport6-dev
+            libqt6sql6-sqlite
+            qt6-tools-dev
+            qml6-module-qtpositioning
+            qml6-module-qtlocation
+            qml6-module-qtquick
+            qml6-module-qtquick-controls
+            qml6-module-qtquick-layouts
+            libgl1-mesa-dev
+          )
+
+          missing=()
+          for pkg in "${packages[@]}"; do
+            if ! sudo apt-get install -y --no-install-recommends "$pkg" >/dev/null 2>&1; then
+              missing+=("$pkg")
+            fi
+          done
+
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::warning::These packages were not installable: ${missing[*]}"
+          fi
+
+          # Report what Qt6 actually landed, so a packaging difference is
+          # visible in the log instead of surfacing as a CMake error later.
+          echo "--- Qt6 CMake configs present ---"
+          find /usr/lib/x86_64-linux-gnu/cmake -maxdepth 1 -name 'Qt6*' -type d 2>/dev/null | sort
+
+          # Fail early and clearly if a component the project requires is absent.
+          for required in Qt6Core Qt6Quick Qt6Location Qt6Positioning Qt6SerialPort Qt6Sql; do
+            if [ ! -d "/usr/lib/x86_64-linux-gnu/cmake/$required" ]; then
+              echo "::error::$required is missing; the build cannot proceed."
+              exit 1
+            fi
+          done
+          echo "All required Qt6 components are present."
 
       - name: Configure
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
