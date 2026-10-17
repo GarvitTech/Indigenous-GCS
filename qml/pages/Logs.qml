@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
+import QtQuick.Dialogs
 import "../components"
 import "../theme"
 
@@ -9,15 +10,35 @@ Rectangle {
     color: Colors.bg0
 
     property var sessions: LogReader.listSessions()
+    property int  liveRows: 0
+    property string notice: ""
+    property bool   noticeIsError: false
 
-    // Refresh sessions list whenever logging stops/starts
+    function refreshSessions() {
+        root.sessions = LogReader.listSessions()
+    }
+
+    // Refresh the list when a recording finishes, and when it starts (so the
+    // in-progress session appears immediately rather than only after stopping).
     Connections {
         target: FlightLogger
-        function onLoggingChanged() {
-            if (!FlightLogger.logging) {
-                root.sessions = LogReader.listSessions()
-            }
+        function onLoggingChanged()  { root.refreshSessions() }
+        function onLoggingStarted()  { root.liveRows = 0; root.refreshSessions() }
+        function onLoggingStopped()  { root.refreshSessions() }
+        function onRowsWritten(total) { root.liveRows = total }
+        function onLoggingFailed(reason) {
+            root.noticeIsError = true
+            root.notice = reason
         }
+    }
+
+    // Poll the row count while recording so the operator can see that data is
+    // genuinely being written, not just that the indicator is on.
+    Timer {
+        interval: 1000
+        running: FlightLogger.logging
+        repeat: true
+        onTriggered: root.liveRows = FlightLogger.currentSessionRowCount()
     }
 
     ColumnLayout {
@@ -68,7 +89,15 @@ Rectangle {
                 baseColor: Colors.ok
                 textColor: Colors.bg0
                 visible: !FlightLogger.logging
-                onClicked: FlightLogger.startLog()
+                enabled: FlightLogger.isAvailable()
+                onClicked: {
+                    // Pass a readable label so the session list shows which
+                    // vehicle produced each recording.
+                    const v = VehicleManager ? VehicleManager.activeVehicle : null
+                    FlightLogger.startLogging(v ? ("sys" + v.sysId) : "unknown")
+                    root.noticeIsError = false
+                    root.notice = "Recording started."
+                }
             }
 
             IGButton {
@@ -76,7 +105,11 @@ Rectangle {
                 implicitWidth: 120
                 danger: true
                 visible: FlightLogger.logging
-                onClicked: FlightLogger.stopLog()
+                onClicked: {
+                    FlightLogger.stopLog()
+                    root.noticeIsError = false
+                    root.notice = "Recording stopped. " + root.liveRows + " rows saved."
+                }
             }
 
             Rectangle { width: 1; height: 20; color: Colors.border }
@@ -93,8 +126,27 @@ Rectangle {
                 text: "REFRESH"
                 implicitWidth: 80
                 secondary: true
-                onClicked: root.sessions = LogReader.listSessions()
+                onClicked: root.refreshSessions()
             }
+        }
+
+        // Status line: recording progress, or the reason logging is unavailable.
+        Text {
+            Layout.fillWidth: true
+            visible: FlightLogger.logging || root.notice !== "" || !FlightLogger.isAvailable()
+            text: {
+                if (!FlightLogger.isAvailable())
+                    return "⚠ Logging unavailable — the log database could not be opened."
+                if (FlightLogger.logging)
+                    return "● RECORDING — " + root.liveRows + " rows written to disk"
+                return root.notice
+            }
+            color: (!FlightLogger.isAvailable() || root.noticeIsError) ? Colors.critical
+                 : (FlightLogger.logging ? Colors.ok : Colors.textSecondary)
+            font.pixelSize: Theme.fontSizeSmall
+            font.family: Theme.fontFamily
+            font.bold: FlightLogger.logging
+            wrapMode: Text.WordWrap
         }
 
         // Session count info
@@ -168,8 +220,8 @@ Rectangle {
                             anchors { fill: parent; leftMargin: Theme.spacingS; rightMargin: Theme.spacingS }
                             spacing: 0
                             Text { text: "DATE / LABEL";    color: Colors.textDisabled; font.pixelSize: Theme.fontSizeTiny; font.family: Theme.fontFamily; Layout.preferredWidth: 140 }
-                            Text { text: "VEH ID";          color: Colors.textDisabled; font.pixelSize: Theme.fontSizeTiny; font.family: Theme.fontFamily; Layout.preferredWidth: 55 }
-                            Text { text: "ENTRIES";         color: Colors.textDisabled; font.pixelSize: Theme.fontSizeTiny; font.family: Theme.fontFamily; Layout.preferredWidth: 55 }
+                            Text { text: "ROWS";            color: Colors.textDisabled; font.pixelSize: Theme.fontSizeTiny; font.family: Theme.fontFamily; Layout.preferredWidth: 45 }
+                            Text { text: "DUR";             color: Colors.textDisabled; font.pixelSize: Theme.fontSizeTiny; font.family: Theme.fontFamily; Layout.preferredWidth: 52 }
                             Text { text: "EXPORT";          color: Colors.textDisabled; font.pixelSize: Theme.fontSizeTiny; font.family: Theme.fontFamily; Layout.fillWidth: true }
                         }
                     }
@@ -228,17 +280,23 @@ Rectangle {
                                         Layout.fillWidth: true
                                     }
                                     Text {
-                                        text: modelData.started || "—"
+                                        // Show a readable local time rather than the
+                                        // raw ISO string stored in the database.
+                                        text: {
+                                            const d = new Date(modelData.started)
+                                            return isNaN(d) ? (modelData.started || "—")
+                                                            : Qt.formatDateTime(d, "yyyy-MM-dd  hh:mm:ss")
+                                        }
                                         color: Colors.textSecondary
                                         font.pixelSize: Theme.fontSizeTiny
                                         font.family: Theme.fontFamily
                                     }
                                 }
 
-                                // Vehicle ID
+                                // Row count for this session
                                 Text {
-                                    text: modelData.vehicleId !== undefined ? modelData.vehicleId.toString() : "—"
-                                    color: Colors.accent
+                                    text: modelData.rowCount !== undefined ? modelData.rowCount.toString() : "0"
+                                    color: modelData.rowCount > 0 ? Colors.ok : Colors.textDisabled
                                     font.pixelSize: Theme.fontSizeSmall
                                     font.family: Theme.fontFamily
                                     font.bold: true
@@ -246,26 +304,32 @@ Rectangle {
                                     horizontalAlignment: Text.AlignHCenter
                                 }
 
-                                // Entry count
+                                // Duration
                                 Text {
-                                    text: modelData.entryCount !== undefined ? modelData.entryCount.toString() : "—"
-                                    color: Colors.textPrimary
-                                    font.pixelSize: Theme.fontSizeSmall
+                                    text: modelData.duration > 0
+                                          ? (Math.floor(modelData.duration / 60) + "m " + (modelData.duration % 60) + "s")
+                                          : (modelData.duration === 0 ? "0s" : "—")
+                                    color: Colors.textSecondary
+                                    font.pixelSize: Theme.fontSizeTiny
                                     font.family: Theme.fontFamily
-                                    Layout.preferredWidth: 45
+                                    Layout.preferredWidth: 52
                                     horizontalAlignment: Text.AlignHCenter
                                 }
 
-                                // Export button
+                                // Export button — opens a save dialog so the file
+                                // goes exactly where the operator chooses.
                                 IGButton {
                                     text: "EXPORT"
-                                    implicitWidth: 60
+                                    implicitWidth: 62
                                     implicitHeight: 22
                                     secondary: true
+                                    enabled: modelData.rowCount > 0
                                     onClicked: {
-                                        if (LogReader.exportSession) {
-                                            LogReader.exportSession(modelData.id)
-                                        }
+                                        exportTargetSession = modelData.id
+                                        exportDialog.currentFile = Qt.platform.os === "windows"
+                                            ? "file:///" + LogReader.suggestedExportName(modelData.id)
+                                            : LogReader.suggestedExportName(modelData.id)
+                                        exportDialog.open()
                                     }
                                 }
                             }
@@ -390,10 +454,29 @@ Rectangle {
 
     ListModel { id: logData }
 
+    property int exportTargetSession: -1
+
     function loadSession(sessionId) {
         logData.clear()
         const rows = LogReader.readSession(sessionId)
         for (let i = 0; i < rows.length; i++) logData.append(rows[i])
+    }
+
+    // ── Export dialog ─────────────────────────────────────────────────────
+    FileDialog {
+        id: exportDialog
+        title: "Export flight log"
+        fileMode: FileDialog.SaveFile
+        nameFilters: ["CSV files (*.csv)", "All files (*)"]
+        defaultSuffix: "csv"
+
+        onAccepted: {
+            const path = selectedFile.toString().replace(/^file:\/\//, "")
+            const ok = LogReader.exportSession(root.exportTargetSession, path)
+            root.noticeIsError = !ok
+            root.notice = ok ? ("Exported to " + path)
+                             : "Export failed — could not write the file."
+        }
     }
 
     // ── Dialogs ───────────────────────────────────────────────────────────

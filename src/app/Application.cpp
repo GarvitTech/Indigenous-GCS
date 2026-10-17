@@ -32,6 +32,9 @@ void Application::initialize()
     m_mavlinkManager     = std::make_unique<MAVLinkManager>(m_settings.get(), this);
     m_vehicleManager     = std::make_unique<VehicleManager>(m_mavlinkManager.get(), this);
     m_flightLogger       = std::make_unique<FlightLogger>(this);
+    // Inject the vehicle source explicitly. The logger no longer reaches for a
+    // global singleton, which keeps it constructible in isolation by tests.
+    m_flightLogger->setVehicleManager(m_vehicleManager.get());
 
     // Wire MAVLink bytes from connection to parser
     connect(m_connectionManager.get(), &ConnectionManager::bytesReceived,

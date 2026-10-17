@@ -59,6 +59,7 @@ set(ALL_SOURCES
     src/safety/FailsafeManager.cpp
     src/logging/FlightLogger.cpp
     src/logging/LogReader.cpp
+    src/logging/LogPaths.cpp
     src/firmware/FirmwareManager.cpp
     src/simulation/Simulator.cpp
     src/utils/Units.cpp

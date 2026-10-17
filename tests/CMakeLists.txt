@@ -77,3 +77,30 @@ qt_add_resources(test_guide guide_resources
 )
 
 add_test(NAME test_guide COMMAND test_guide)
+
+# ── test_logging ──────────────────────────────────────────────────────────────
+# Exercises the real FlightLogger + LogReader against a real SQLite database.
+# This is the test that catches the writer/reader path divergence that made
+# recordings invisible in the Logs page.
+qt_add_executable(test_logging
+    test_logging/test_logging.cpp
+    ${SRC}/logging/FlightLogger.cpp
+    ${SRC}/logging/LogReader.cpp
+    ${SRC}/logging/LogPaths.cpp
+)
+target_include_directories(test_logging PRIVATE ${SRC} ${MAVLINK_INCLUDE_DIR})
+target_link_libraries(test_logging PRIVATE Qt6::Test Qt6::Core Qt6::Sql)
+add_test(NAME test_logging COMMAND test_logging)
+
+# ── test_logging_integration ────────────────────────────────────────────────
+# Behavioural end-to-end check of the record -> stop -> list -> read -> export
+# sequence that the Logs page performs.
+qt_add_executable(test_logging_integration
+    test_logging/test_logging_integration.cpp
+    ${SRC}/logging/FlightLogger.cpp
+    ${SRC}/logging/LogReader.cpp
+    ${SRC}/logging/LogPaths.cpp
+)
+target_include_directories(test_logging_integration PRIVATE ${SRC} ${MAVLINK_INCLUDE_DIR})
+target_link_libraries(test_logging_integration PRIVATE Qt6::Test Qt6::Core Qt6::Sql)
+add_test(NAME test_logging_integration COMMAND test_logging_integration)
