@@ -4,8 +4,8 @@
 namespace IndigenousGCS::GeoUtils {
 
 static constexpr double kEarthRadiusM = 6371000.0;
-static constexpr double kDeg2Rad      = M_PI / 180.0;
-static constexpr double kRad2Deg      = 180.0 / M_PI;
+static constexpr double kDeg2Rad      = kDegToRad;
+static constexpr double kRad2Deg      = kRadToDeg;
 
 double distanceBetween(const GeoCoordinate &from, const GeoCoordinate &to)
 {

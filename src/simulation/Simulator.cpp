@@ -1,10 +1,14 @@
 #include "Simulator.h"
+#include "utils/GeoUtils.h"
 #include <cmath>
 #include <QLoggingCategory>
 
 Q_LOGGING_CATEGORY(lcSim, "igcs.simulator")
 
 namespace IndigenousGCS {
+
+// Pi from the shared utility rather than M_PI, which MSVC does not define.
+using GeoUtils::kPi;
 
 // Static constexpr member definition
 constexpr Simulator::WP Simulator::kWaypoints[3];
@@ -227,7 +231,7 @@ void Simulator::advanceAutoPilot()
             m_lat += (stepM / 111000.0) * std::cos(bearing);
             m_lon += (stepM / 96000.0)  * std::sin(bearing);
             m_groundSpd = static_cast<float>(speed);
-            m_heading   = static_cast<float>(bearing * 180.0 / M_PI);
+            m_heading   = static_cast<float>(bearing * GeoUtils::kRadToDeg);
             if (m_heading < 0) m_heading += 360.0f;
             m_yaw   = m_heading;
             m_roll  = 5.0f * std::sin(m_phaseTickCount * 0.1f);
@@ -256,7 +260,7 @@ void Simulator::advanceAutoPilot()
             m_lat += (stepM / 111000.0) * std::cos(bearing);
             m_lon += (stepM / 96000.0)  * std::sin(bearing);
             m_groundSpd = static_cast<float>(speed);
-            m_heading   = static_cast<float>(bearing * 180.0 / M_PI);
+            m_heading   = static_cast<float>(bearing * GeoUtils::kRadToDeg);
             if (m_heading < 0) m_heading += 360.0f;
             m_yaw   = m_heading;
             m_roll  = 5.0f * std::sin(m_phaseTickCount * 0.1f);
@@ -285,7 +289,7 @@ void Simulator::advanceAutoPilot()
             m_lat += (stepM / 111000.0) * std::cos(bearing);
             m_lon += (stepM / 96000.0)  * std::sin(bearing);
             m_groundSpd = static_cast<float>(speed);
-            m_heading   = static_cast<float>(bearing * 180.0 / M_PI);
+            m_heading   = static_cast<float>(bearing * GeoUtils::kRadToDeg);
             if (m_heading < 0) m_heading += 360.0f;
             m_yaw   = m_heading;
             m_roll  = 5.0f * std::sin(m_phaseTickCount * 0.1f);
@@ -334,7 +338,7 @@ void Simulator::advanceAutoPilot()
             m_lat += (stepM / 111000.0) * std::cos(bearing);
             m_lon += (stepM / 96000.0)  * std::sin(bearing);
             m_groundSpd = static_cast<float>(speed);
-            m_heading   = static_cast<float>(bearing * 180.0 / M_PI);
+            m_heading   = static_cast<float>(bearing * GeoUtils::kRadToDeg);
             if (m_heading < 0) m_heading += 360.0f;
             m_yaw   = m_heading;
             m_roll  = 3.0f * std::sin(m_phaseTickCount * 0.1f);
@@ -402,9 +406,9 @@ void Simulator::sendAttitude()
     mavlink_message_t msg;
     mavlink_msg_attitude_pack(kSysId, kCompId, &msg,
                               m_tickCount * kTickMs,
-                              m_roll  * static_cast<float>(M_PI) / 180.0f,
-                              m_pitch * static_cast<float>(M_PI) / 180.0f,
-                              m_yaw   * static_cast<float>(M_PI) / 180.0f,
+                              m_roll  * static_cast<float>(GeoUtils::kDegToRad),
+                              m_pitch * static_cast<float>(GeoUtils::kDegToRad),
+                              m_yaw   * static_cast<float>(GeoUtils::kDegToRad),
                               0.0f, 0.0f, 0.0f);
     packAndEmit(msg);
 }
