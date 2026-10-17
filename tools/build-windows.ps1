@@ -127,18 +127,76 @@ Write-Host "    (copies Qt DLLs, platform plugins and QML modules next to the .e
 & $windeployqt --release --qmldir (Join-Path $repo "qml") $exe.FullName
 if ($LASTEXITCODE -ne 0) { throw "windeployqt failed (exit $LASTEXITCODE)" }
 
-# Verify the essentials actually landed next to the executable.
-$required = @("Qt6Core.dll", "Qt6Gui.dll", "Qt6Quick.dll", "Qt6Location.dll", "Qt6SerialPort.dll")
-$missing  = @()
+# Verify the essentials actually landed next to the executable. This is fatal
+# rather than a warning: a build that only runs because Qt happens to be on the
+# developer's PATH is not shippable, and discovering that on a user's machine
+# is far worse than failing here.
+$required = @(
+    "Qt6Core.dll", "Qt6Gui.dll", "Qt6Quick.dll", "Qt6QuickControls2.dll",
+    "Qt6Network.dll", "Qt6SerialPort.dll", "Qt6Sql.dll",
+    "Qt6Location.dll", "Qt6Positioning.dll"
+)
+$missing = @()
 foreach ($dll in $required) {
     if (-not (Test-Path (Join-Path $exeDir $dll))) { $missing += $dll }
 }
+
 if ($missing.Count -gt 0) {
-    Write-Warning "windeployqt did not place these DLLs next to the exe: $($missing -join ', ')"
-    Write-Warning "The app may fail to start on a machine without Qt installed."
-} else {
-    Write-Host "    OK - Qt runtime is self-contained next to the .exe"
+    throw @"
+windeployqt did not place these DLLs next to the executable:
+  $($missing -join ', ')
+
+The build is not self-contained and would fail on a machine without Qt.
+Check that windeployqt came from the same Qt kit used to build, and that
+only one Qt version is on PATH.
+"@
 }
+
+# The QML module directory must exist too, or the UI cannot load at runtime.
+$qmlDir = Join-Path $exeDir "qml"
+if (-not (Test-Path $qmlDir)) {
+    throw "The deployed 'qml' module directory is missing from $exeDir — the UI would fail to load."
+}
+
+# The SQLite driver plugin is required for flight logging.
+$sqlDrivers = Join-Path $exeDir "sqldrivers"
+if (-not (Test-Path (Join-Path $sqlDrivers "qsqlite.dll"))) {
+    throw "The SQLite driver plugin (sqldrivers\qsqlite.dll) was not deployed — flight logging would not work."
+}
+
+Write-Host "    OK - Qt runtime and plugins are self-contained next to the .exe"
+
+# ── Smoke test ───────────────────────────────────────────────────────────────
+# Launch the application and confirm it survives startup. A QML load failure
+# exits immediately, so staying alive is a meaningful check that the UI built.
+Write-Step "Smoke-testing the executable"
+
+$env:IGCS_AUTOSTART_SIM = "1"
+$stdout = Join-Path $buildPath "smoke-stdout.txt"
+$stderr = Join-Path $buildPath "smoke-stderr.txt"
+
+$proc = Start-Process -FilePath $exe.FullName -PassThru `
+                      -RedirectStandardOutput $stdout `
+                      -RedirectStandardError  $stderr
+Start-Sleep -Seconds 15
+
+if ($proc.HasExited) {
+    Write-Host "--- stdout ---"
+    Get-Content $stdout -ErrorAction SilentlyContinue | Write-Host
+    Write-Host "--- stderr ---"
+    Get-Content $stderr -ErrorAction SilentlyContinue | Write-Host
+    throw "The application exited during startup (exit code $($proc.ExitCode))."
+}
+Write-Host "    Application is running after 15 seconds."
+Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+
+$errText = (Get-Content $stderr -ErrorAction SilentlyContinue | Out-String)
+if ($errText -match "TypeError|ReferenceError|is not defined|Non-existent") {
+    Write-Host $errText
+    throw "QML errors were reported at startup."
+}
+Write-Host "    No QML errors reported."
+Remove-Item Env:\IGCS_AUTOSTART_SIM -ErrorAction SilentlyContinue
 
 # ── Install + package ────────────────────────────────────────────────────────
 if ($SkipPackage) {

@@ -1,0 +1,210 @@
+# Build and test Indigenous GCS on Windows, macOS and Linux.
+#
+# This workflow exists because the Windows build cannot be verified from a
+# macOS development machine. Every push and pull request compiles the project
+# with MSVC on a real Windows runner and runs the full test suite, so a
+# Windows-only break is caught within minutes instead of at packaging time.
+#
+# It also produces a downloadable portable Windows build and an NSIS installer
+# as workflow artifacts, so a release does not depend on any local toolchain.
+
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  windows:
+    name: Windows (MSVC 2022 x64)
+    runs-on: windows-2022
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt 6
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2022_64'
+          modules: 'qtlocation qtpositioning'
+          cache: true
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -G "Visual Studio 17 2022" -A x64
+          -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}"
+          -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Run tests
+        run: ctest --test-dir build -C Release --output-on-failure
+
+      - name: Deploy Qt runtime
+        run: >
+          windeployqt --release --qmldir qml
+          build\bin\Release\IndigenousGCS.exe
+
+      - name: Verify the deployment is self-contained
+        shell: pwsh
+        run: |
+          # A build that only works because Qt is on PATH is not shippable.
+          # Assert the core DLLs are physically present beside the executable.
+          $dir = "build\bin\Release"
+          $required = @("Qt6Core.dll","Qt6Gui.dll","Qt6Quick.dll",
+                        "Qt6QuickControls2.dll","Qt6Network.dll",
+                        "Qt6SerialPort.dll","Qt6Sql.dll",
+                        "Qt6Location.dll","Qt6Positioning.dll")
+          $missing = @()
+          foreach ($dll in $required) {
+            if (-not (Test-Path (Join-Path $dir $dll))) { $missing += $dll }
+          }
+          if ($missing.Count -gt 0) {
+            Write-Error "windeployqt did not deploy: $($missing -join ', ')"
+            exit 1
+          }
+          Write-Host "All required Qt DLLs are present."
+          # The QML module directory must also exist or the UI cannot load.
+          if (-not (Test-Path (Join-Path $dir "qml"))) {
+            Write-Error "The qml module directory was not deployed."
+            exit 1
+          }
+          Write-Host "QML modules are present."
+
+      - name: Smoke-test the executable
+        shell: pwsh
+        run: |
+          # Launch with the simulator and confirm the process survives startup.
+          # A QML load failure exits immediately, so surviving 15 seconds is a
+          # meaningful signal that the UI actually built.
+          $env:IGCS_AUTOSTART_SIM = "1"
+          $env:QT_QPA_PLATFORM = "offscreen"
+          $exe = "build\bin\Release\IndigenousGCS.exe"
+          $p = Start-Process -FilePath $exe -PassThru -RedirectStandardError "stderr.txt" -RedirectStandardOutput "stdout.txt"
+          Start-Sleep -Seconds 15
+          if ($p.HasExited) {
+            Write-Host "--- stdout ---"; Get-Content stdout.txt -ErrorAction SilentlyContinue
+            Write-Host "--- stderr ---"; Get-Content stderr.txt -ErrorAction SilentlyContinue
+            Write-Error "The application exited during startup (exit code $($p.ExitCode))."
+            exit 1
+          }
+          Write-Host "Application is running after 15 seconds."
+          Stop-Process -Id $p.Id -Force
+
+          # A QML error would have been printed to stderr.
+          $err = Get-Content stderr.txt -ErrorAction SilentlyContinue | Out-String
+          if ($err -match "TypeError|ReferenceError|is not defined|Non-existent") {
+            Write-Host $err
+            Write-Error "QML errors were reported at startup."
+            exit 1
+          }
+          Write-Host "No QML errors reported."
+
+      - name: Package the portable build
+        shell: pwsh
+        run: |
+          $dest = "build\IndigenousGCS-windows-x64"
+          New-Item -ItemType Directory -Path $dest -Force | Out-Null
+          Copy-Item -Recurse "build\bin\Release\*" $dest
+          Compress-Archive -Path "$dest\*" -DestinationPath "build\IndigenousGCS-windows-x64.zip"
+
+      - name: Build the NSIS installer
+        run: cpack -C Release --config build\CPackConfig.cmake
+        continue-on-error: true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: IndigenousGCS-windows
+          path: |
+            build/IndigenousGCS-windows-x64.zip
+            build/*.exe
+          if-no-files-found: warn
+
+  macos:
+    name: macOS (Apple Silicon)
+    runs-on: macos-14
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt 6
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.8.3'
+          host: 'mac'
+          target: 'desktop'
+          arch: 'clang_64'
+          modules: 'qtlocation qtpositioning'
+          cache: true
+
+      - name: Configure
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_PREFIX_PATH="${{ env.Qt6_DIR }}"
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Deploy Qt runtime
+        run: macdeployqt build/bin/IndigenousGCS.app -qmldir=qml -always-overwrite
+
+      - name: Smoke-test the application
+        run: |
+          # Surviving startup proves the QML loaded; a load failure exits at once.
+          IGCS_AUTOSTART_SIM=1 ./build/bin/IndigenousGCS.app/Contents/MacOS/IndigenousGCS > out.log 2>&1 &
+          PID=$!
+          sleep 15
+          if ! kill -0 $PID 2>/dev/null; then
+            echo "--- output ---"; cat out.log
+            echo "Application exited during startup"
+            exit 1
+          fi
+          echo "Application is running after 15 seconds."
+          kill $PID 2>/dev/null || true
+          if grep -qE "TypeError|ReferenceError|is not defined|Non-existent" out.log; then
+            cat out.log
+            echo "QML errors were reported at startup"
+            exit 1
+          fi
+          echo "No QML errors reported."
+
+  linux:
+    name: Linux (GCC)
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt 6 and build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            qt6-base-dev qt6-declarative-dev qt6-positioning-dev \
+            qt6-location-dev libqt6serialport6-dev \
+            libqt6sql6-sqlite qt6-tools-dev qt6-tools-dev-tools \
+            libgl1-mesa-dev ninja-build
+
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run tests
+        run: ctest --test-dir build --output-on-failure

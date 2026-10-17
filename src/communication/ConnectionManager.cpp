@@ -44,17 +44,48 @@ QVariantList ConnectionManager::availableSerialPorts() const
 
 QStringList ConnectionManager::supportedBaudRates() const
 {
+    // Only rates that every platform actually supports are listed. Windows
+    // rejects arbitrary baud values, so the UI must offer a known-good set
+    // rather than letting the operator type an unsupported number.
     return { "57600", "115200", "230400", "460800", "921600" };
 }
 
 bool ConnectionManager::connectSerial(const QString &port, int baud)
 {
+    if (port.trimmed().isEmpty()) {
+        emit errorOccurred(tr("No serial port selected."));
+        return false;
+    }
+    if (baud <= 0) {
+        emit errorOccurred(tr("Invalid baud rate: %1").arg(baud));
+        return false;
+    }
+
     disconnect();
     auto conn = std::make_unique<SerialConnection>(this);
-    conn->setPortName(port);
+    conn->setPortName(normalizePortName(port));
     conn->setBaudRate(static_cast<qint32>(baud));
     setActiveConnection(std::move(conn));
     return m_connection->open();
+}
+
+QString ConnectionManager::normalizePortName(const QString &port)
+{
+    const QString trimmed = port.trimmed();
+
+#ifdef Q_OS_WIN
+    // Windows requires the \\.\ prefix for COM ports numbered 10 and above;
+    // without it, opening "COM10" fails with a file-not-found error even though
+    // the port is present. Ports COM1..COM9 work either way, but using the
+    // prefix consistently is harmless and removes a whole class of
+    // "it works for COM3 but not COM12" reports.
+    if (trimmed.startsWith(QStringLiteral("COM"), Qt::CaseInsensitive)
+        && !trimmed.startsWith(QStringLiteral("\\\\.\\"))) {
+        return QStringLiteral("\\\\.\\") + trimmed;
+    }
+#endif
+
+    return trimmed;
 }
 
 bool ConnectionManager::connectUDP(const QString &host, int port)

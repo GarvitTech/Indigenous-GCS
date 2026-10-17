@@ -46,6 +46,10 @@ private:
     void setActiveConnection(std::unique_ptr<Connection> conn);
     void onStateChanged(ConnectionState state);
 
+    /// Translate a port name into the form the platform's serial API expects.
+    /// On Windows this adds the \\.\ prefix required for COM10 and above.
+    static QString normalizePortName(const QString &port);
+
     std::unique_ptr<Connection> m_connection;
 };
 

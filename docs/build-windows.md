@@ -61,6 +61,21 @@ cd IndigenousGCS
 
 ---
 
+## Before you build: check your environment
+
+Run this first. It reports exactly which component is missing and the command
+to install it, instead of leaving you with a confusing CMake error:
+
+```powershell
+.\tools\check-windows-env.ps1
+```
+
+It checks Windows architecture, CMake version, the Visual Studio C++ workload,
+Qt 6 (including the Location, Positioning, SerialPort, SQL and Quick modules),
+Git, and optionally Ninja, NSIS and Python. It prints the Qt directory to use.
+
+---
+
 ## Build — Visual Studio Generator
 
 ```powershell
