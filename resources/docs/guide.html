@@ -522,8 +522,10 @@ winget install --id Git.Git            --accept-package-agreements --accept-sour
 
 <span class="c"># ── 2. Install Qt 6 ─────────────────────</span>
 <span class="c"># aqtinstall fetches Qt without needing the Qt online installer GUI.</span>
+<span class="c"># The extra modules are NOT optional: the app needs QtLocation, QtPositioning</span>
+<span class="c"># (maps) and QtSerialPort (USB link to the flight controller).</span>
 python -m pip install --upgrade pip aqtinstall
-python -m aqt install-qt windows desktop 6.8.3 win64_msvc2022_64 -O C:\Qt
+python -m aqt install-qt windows desktop 6.8.3 win64_msvc2022_64 -O C:\Qt -m qtlocation qtpositioning qtserialport
 
 <span class="c"># ── 3. Build the application ────────────────────────────</span>
 <span class="c"># Re-open PowerShell after step 1 so the new tools are on PATH.</span>

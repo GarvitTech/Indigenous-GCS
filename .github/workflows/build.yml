@@ -33,7 +33,11 @@ jobs:
           host: 'windows'
           target: 'desktop'
           arch: 'win64_msvc2022_64'
-          modules: 'qtlocation qtpositioning'
+          # qtserialport is required by the application (MAVLink over USB) and
+          # is NOT part of the default Qt install, so it must be named here or
+          # CMake configure fails with "Failed to find required Qt component
+          # SerialPort".
+          modules: 'qtlocation qtpositioning qtserialport'
           cache: true
 
       - name: Configure
@@ -145,7 +149,7 @@ jobs:
           host: 'mac'
           target: 'desktop'
           arch: 'clang_64'
-          modules: 'qtlocation qtpositioning'
+          modules: 'qtlocation qtpositioning qtserialport'
           cache: true
 
       - name: Configure
@@ -194,11 +198,18 @@ jobs:
       - name: Install Qt 6 and build dependencies
         run: |
           sudo apt-get update
+          # Package names on Ubuntu 24.04. libqt6serialport6-dev provides the
+          # Qt6SerialPort CMake config the application requires.
           sudo apt-get install -y \
-            qt6-base-dev qt6-declarative-dev qt6-positioning-dev \
-            qt6-location-dev libqt6serialport6-dev \
-            libqt6sql6-sqlite qt6-tools-dev qt6-tools-dev-tools \
-            libgl1-mesa-dev ninja-build
+            cmake ninja-build \
+            qt6-base-dev \
+            qt6-declarative-dev \
+            qt6-positioning-dev \
+            qt6-location-dev \
+            libqt6serialport6-dev \
+            libqt6sql6-sqlite \
+            qt6-tools-dev \
+            libgl1-mesa-dev
 
       - name: Configure
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
