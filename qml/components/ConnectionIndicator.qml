@@ -6,7 +6,9 @@ RowLayout {
     spacing: 6
 
     property int    connState:   ConnectionManager ? ConnectionManager.connectionState : 0
-    property bool   fcDetected:  MAVLinkManager ? MAVLinkManager.hasVehicle : false
+    property bool   fcDetected:  MAVLinkManager ? MAVLinkManager.hasPhysicalVehicle : false
+    property bool   simulatedVehicle: VehicleManager && VehicleManager.activeVehicle
+                                      ? VehicleManager.activeVehicle.simulated : false
     property string description: ConnectionManager ? ConnectionManager.description : "Disconnected"
 
     // 0=Disconnected 1=Connecting 2=Connected 3=Reconnecting 4=Error
@@ -41,15 +43,17 @@ RowLayout {
     }
 
     Text {
-        text: fcDetected ? "FC DETECTED" : stateLabel
-        color: dotColor
+        text: fcDetected ? "FC DETECTED" : simulatedVehicle ? "SIMULATION ONLY" : stateLabel
+        color: simulatedVehicle && !fcDetected ? Colors.warning : dotColor
         font.pixelSize: Theme.fontSizeSmall
         font.family: Theme.fontFamily
         font.bold: true
     }
 
     Text {
-        text: fcDetected ? "Heartbeat received" : description
+        text: fcDetected ? "Flight-controller heartbeat received"
+                         : simulatedVehicle ? "Simulated heartbeat — no physical FC"
+                                            : description
         color: Colors.textSecondary
         font.pixelSize: Theme.fontSizeSmall
         font.family: Theme.fontFamily

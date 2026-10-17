@@ -5,6 +5,7 @@ import "../components"
 import "../theme"
 
 Rectangle {
+    id: dash
     color: Colors.bg0
     property var tel: VehicleManager && VehicleManager.activeVehicle ? VehicleManager.activeVehicle.telemetry : null
     property var v:   VehicleManager ? VehicleManager.activeVehicle : null
@@ -23,6 +24,21 @@ Rectangle {
                 anchors { fill: parent; leftMargin: Theme.spacingM; rightMargin: Theme.spacingM }
                 Text { text: "DASHBOARD"; color: Colors.accent; font.pixelSize: Theme.fontSizeMedium; font.family: Theme.fontFamily; font.bold: true; font.letterSpacing: 3 }
                 Item { Layout.fillWidth: true }
+
+                // FC connection entry point. Opens the real ConnectionPanel; the
+                // button reflects live ConnectionManager state, not a local flag.
+                IGButton {
+                    id: connectButton
+                    text: ConnectionManager && ConnectionManager.isConnected
+                          ? "DISCONNECT" : "CONNECT FC"
+                    implicitWidth: 118
+                    implicitHeight: 26
+                    active: !(ConnectionManager && ConnectionManager.isConnected)
+                    danger: ConnectionManager && ConnectionManager.isConnected
+                    onClicked: connectionPanel.open()
+                }
+
+                Item { width: Theme.spacingS }
                 VehicleStatus {}
                 Item { width: Theme.spacingS }
                 FlightModeSelector {}
@@ -36,13 +52,15 @@ Rectangle {
 
             // ── Column 1: Attitude + GPS ──────────────────────────────────────
             ColumnLayout {
-                Layout.preferredWidth: 280
+                Layout.preferredWidth: 480
+                Layout.minimumWidth: 420
                 Layout.fillHeight: true
                 spacing: 1
 
-                // Artificial Horizon
+                // ArduPilot-style HUD (compact 4:3)
                 Rectangle {
-                    Layout.fillWidth: true; Layout.preferredHeight: 280
+                    Layout.fillWidth: true; Layout.preferredHeight: 210
+                    Layout.minimumHeight: 170
                     color: Colors.bg1; border.color: Colors.border; border.width: 1
                     Column {
                         anchors { top: parent.top; left: parent.left; margins: Theme.spacingS }
@@ -50,9 +68,22 @@ Rectangle {
                     }
                     ArtificialHorizon {
                         anchors.centerIn: parent
-                        width: 240; height: 240
-                        rollDeg:  tel ? tel.roll  : 0
-                        pitchDeg: tel ? tel.pitch : 0
+                        height: Math.min(parent.height - 24, (parent.width - 16) * 0.75)
+                        width: height / 0.75
+                        rollDeg:        tel ? tel.roll : 0
+                        pitchDeg:       tel ? tel.pitch : 0
+                        heading:        tel ? tel.heading : 0
+                        altitude:       tel ? tel.altitudeRel : 0
+                        groundSpeed:    tel ? tel.groundSpeed : 0
+                        airSpeed:       tel ? tel.airSpeed : 0
+                        climbRate:      tel ? tel.climbRate : 0
+                        batteryPercent: tel ? tel.batteryRemaining : -1
+                        batteryVoltage: tel ? tel.batteryVoltage : 0
+                        gpsFix:         tel ? tel.gpsFixType : 0
+                        satellites:     tel ? tel.gpsSatCount : 0
+                        armed:          tel ? tel.armed : false
+                        dataAvailable:  tel !== null
+                        flightMode:     tel ? tel.flightMode : "NO LINK"
                     }
                 }
 
@@ -125,8 +156,8 @@ Rectangle {
                     BigTelCard { label: "HDOP";       value: tel ? tel.hdop.toFixed(2) : "—"; w: 100 }
                     BigTelCard { label: "BATTERY";    value: tel ? tel.batteryRemaining + "%" : "—"; w: 110;
                         valueColor: tel && tel.batteryRemaining < 20 ? Colors.critical : (tel && tel.batteryRemaining < 40 ? Colors.warning : Colors.ok) }
-                    BigTelCard { label: "VOLTAGE";    value: tel ? tel.batteryVoltage.toFixed(2) : "—"; unit: "V"; w: 110 }
-                    BigTelCard { label: "CURRENT";    value: tel ? tel.batteryCurrent.toFixed(1) : "—"; unit: "A"; w: 110 }
+                    BigTelCard { label: "VOLTAGE";    value: tel && tel.batteryVoltage >= 0 ? tel.batteryVoltage.toFixed(2) : "—"; unit: "V"; w: 110 }
+                    BigTelCard { label: "CURRENT";    value: tel && tel.batteryCurrent >= 0 ? tel.batteryCurrent.toFixed(1) : "—"; unit: "A"; w: 110 }
                     BigTelCard { label: "CPU LOAD";   value: tel ? tel.cpuLoad + "‰" : "—"; w: 100 }
                 }
 
@@ -166,5 +197,12 @@ Rectangle {
                 Text { text: unit; color: Colors.textSecondary; font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily; visible: unit !== ""; anchors.bottom: parent.bottom; bottomPadding: 3 }
             }
         }
+    }
+
+    // Anchored to the window so it floats above the page content.
+    ConnectionPanel {
+        id: connectionPanel
+        parent: Overlay.overlay
+        anchors.centerIn: Overlay.overlay
     }
 }

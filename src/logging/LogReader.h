@@ -13,6 +13,7 @@ public:
 
     Q_INVOKABLE QVariantList listSessions() const;
     Q_INVOKABLE QVariantList readSession(qint64 sessionId) const;
+    Q_INVOKABLE bool clearSessions();
 
 private:
     QSqlDatabase m_db;

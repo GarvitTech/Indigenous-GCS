@@ -90,6 +90,19 @@ void MAVLinkSender::sendMissionItemInt(uint8_t targetSys, uint8_t targetComp,
     sendMessage(msg);
 }
 
+void MAVLinkSender::sendMissionItem(uint8_t targetSys, uint8_t targetComp,
+                                     const mavlink_mission_item_t &item)
+{
+    mavlink_message_t msg;
+    mavlink_msg_mission_item_pack(m_sysId, m_compId, &msg,
+                                  targetSys, targetComp,
+                                  item.seq, item.frame, item.command,
+                                  item.current, item.autocontinue,
+                                  item.param1, item.param2, item.param3, item.param4,
+                                  item.x, item.y, item.z, MAV_MISSION_TYPE_MISSION);
+    sendMessage(msg);
+}
+
 void MAVLinkSender::sendMissionRequestList(uint8_t targetSys, uint8_t targetComp)
 {
     mavlink_message_t msg;
@@ -103,6 +116,14 @@ void MAVLinkSender::sendMissionRequestInt(uint8_t targetSys, uint8_t targetComp,
     mavlink_message_t msg;
     mavlink_msg_mission_request_int_pack(m_sysId, m_compId, &msg,
                                          targetSys, targetComp, seq, MAV_MISSION_TYPE_MISSION);
+    sendMessage(msg);
+}
+
+void MAVLinkSender::sendMissionRequest(uint8_t targetSys, uint8_t targetComp, uint16_t seq)
+{
+    mavlink_message_t msg;
+    mavlink_msg_mission_request_pack(m_sysId, m_compId, &msg,
+                                     targetSys, targetComp, seq, MAV_MISSION_TYPE_MISSION);
     sendMessage(msg);
 }
 

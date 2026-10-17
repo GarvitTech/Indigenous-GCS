@@ -1,6 +1,8 @@
 #include "ParameterManager.h"
 #include "mavlink/MAVLinkManager.h"
 #include "mavlink/MAVLinkSender.h"
+#include <QFile>
+#include <QTextStream>
 #include <QLoggingCategory>
 
 Q_LOGGING_CATEGORY(lcParam, "igcs.params")
@@ -10,19 +12,94 @@ namespace IndigenousGCS {
 ParameterManager::ParameterManager(MAVLinkManager *mavlink, QObject *parent)
     : QObject(parent), m_mavlink(mavlink) {}
 
+// ── New API ──────────────────────────────────────────────────────────────────
+
+void ParameterManager::requestAllParameters()
+{
+    requestAll(m_targetSys, m_targetComp);
+}
+
+bool ParameterManager::setParameter(const QString &name, double value)
+{
+    setParameterRaw(m_targetSys, m_targetComp, name, static_cast<float>(value));
+    return true;
+}
+
+QVariantList ParameterManager::getParameters() const
+{
+    QVariantList result;
+    QStringList names = m_params.keys();
+    names.sort();
+    for (const QString &name : names) {
+        const Parameter &p = m_params[name];
+        QVariantMap entry;
+        entry["name"]  = p.name;
+        entry["value"] = static_cast<double>(p.value);
+        entry["type"]  = p.typeName();
+        entry["index"] = static_cast<int>(p.index);
+        result.append(entry);
+    }
+    return result;
+}
+
+void ParameterManager::exportParameters(const QString &filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qCWarning(lcParam) << "Cannot open file for export:" << filePath;
+        return;
+    }
+    QTextStream out(&file);
+    out << "# IndigenousGCS Parameter Export\n";
+    out << "# name\tvalue\ttype\n";
+
+    QStringList names = m_params.keys();
+    names.sort();
+    for (const QString &name : names) {
+        const Parameter &p = m_params[name];
+        out << p.name << "\t" << p.value << "\t" << p.typeName() << "\n";
+    }
+    qCInfo(lcParam) << "Exported" << m_params.size() << "parameters to" << filePath;
+}
+
+void ParameterManager::importParameters(const QString &filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qCWarning(lcParam) << "Cannot open file for import:" << filePath;
+        return;
+    }
+    QTextStream in(&file);
+    int count = 0;
+    while (!in.atEnd()) {
+        QString line = in.readLine().trimmed();
+        if (line.isEmpty() || line.startsWith('#')) continue;
+        QStringList parts = line.split('\t');
+        if (parts.size() < 2) continue;
+        QString name  = parts[0].trimmed();
+        float   value = parts[1].trimmed().toFloat();
+        setParameterRaw(m_targetSys, m_targetComp, name, value);
+        ++count;
+    }
+    qCInfo(lcParam) << "Imported" << count << "parameters from" << filePath;
+}
+
+// ── Legacy API ───────────────────────────────────────────────────────────────
+
 void ParameterManager::requestAll(uint8_t targetSys, uint8_t targetComp)
 {
     m_params.clear();
     m_totalCount = 0;
     m_loading    = true;
+    emit isDownloadingChanged();
     emit loadingChanged();
     emit parametersChanged();
     m_mavlink->sender()->sendParamRequestList(targetSys, targetComp);
     qCInfo(lcParam) << "Requesting all parameters from sysId=" << targetSys;
 }
 
-void ParameterManager::setParameter(uint8_t targetSys, uint8_t targetComp,
-                                     const QString &name, float value)
+void ParameterManager::setParameterRaw(uint8_t targetSys, uint8_t targetComp,
+                                        const QString &name, float value)
 {
     MAV_PARAM_TYPE type = MAV_PARAM_TYPE_REAL32;
     if (m_params.contains(name))
@@ -44,6 +121,8 @@ QStringList ParameterManager::parameterNames() const
     names.sort();
     return names;
 }
+
+// ── Message handling ─────────────────────────────────────────────────────────
 
 void ParameterManager::handleMessage(const mavlink_message_t &msg)
 {
@@ -70,8 +149,12 @@ void ParameterManager::handleParamValue(const mavlink_message_t &msg)
     if (m_totalCount == 0 && pv.param_count > 0)
         m_totalCount = pv.param_count;
 
-    if (m_loading && m_params.size() >= m_totalCount && m_totalCount > 0) {
+    int received = m_params.size();
+    emit downloadProgress(received, m_totalCount);
+
+    if (m_loading && received >= m_totalCount && m_totalCount > 0) {
         m_loading = false;
+        emit isDownloadingChanged();
         emit loadingChanged();
         qCInfo(lcParam) << "All" << m_totalCount << "parameters received";
     }

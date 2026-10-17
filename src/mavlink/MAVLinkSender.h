@@ -30,8 +30,11 @@ public:
     void sendMissionCount(uint8_t targetSys, uint8_t targetComp, uint16_t count);
     void sendMissionItemInt(uint8_t targetSys, uint8_t targetComp,
                             const mavlink_mission_item_int_t &item);
+    void sendMissionItem(uint8_t targetSys, uint8_t targetComp,
+                         const mavlink_mission_item_t &item);
     void sendMissionRequestList(uint8_t targetSys, uint8_t targetComp);
     void sendMissionRequestInt(uint8_t targetSys, uint8_t targetComp, uint16_t seq);
+    void sendMissionRequest(uint8_t targetSys, uint8_t targetComp, uint16_t seq);
     void sendMissionAck(uint8_t targetSys, uint8_t targetComp, MAV_MISSION_RESULT result);
     void sendMissionClearAll(uint8_t targetSys, uint8_t targetComp);
     void sendSetMode(uint8_t targetSys, uint8_t baseMode, uint32_t customMode);

@@ -4,12 +4,16 @@ build/
 *.user.*
 *.autosave
 .vscode/
-
 # Local firmware/tool outputs
 *.bin
 *.elf
 *.hex
 *.map
-
-# macOS generated icon source directory
+# macOS generated icon source directory — this is an intermediate input for
+# iconutil, not a build artefact the project needs. The committed icon is
+# resources/icons/app_icon.png (and app_icon.ico / app_icon.icns derived from it).
 resources/icons/app_icon.iconset/
+
+# Local developer override for a paid map tile key. The application ships with
+# keyless OpenStreetMap tiles, so this file is never required.
+cmake/maptiler_key.txt

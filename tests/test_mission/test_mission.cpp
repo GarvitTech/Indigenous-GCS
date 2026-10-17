@@ -1,4 +1,5 @@
 #include <QtTest>
+#include <limits>
 #include "mission/Mission.h"
 #include "mission/Waypoint.h"
 #include "mission/MissionSerializer.h"
@@ -18,6 +19,20 @@ private slots:
         QCOMPARE(m.waypoints()[0].latitude,  28.6);
         QCOMPARE(m.waypoints()[0].longitude, 77.2);
         QCOMPARE(m.waypoints()[0].altitude,  10.0f);
+    }
+
+    void testWaypointListForQml() {
+        Mission m;
+        m.addWaypoint(28.6, 77.2, 10.0f);
+
+        const QVariantList waypoints = m.waypointList();
+        QCOMPARE(waypoints.size(), 1);
+        const QVariantMap waypoint = waypoints.first().toMap();
+        QCOMPARE(waypoint.value("seq").toUInt(), 0u);
+        QCOMPARE(waypoint.value("commandName").toString(), QString("Waypoint"));
+        QCOMPARE(waypoint.value("latitude").toDouble(), 28.6);
+        QCOMPARE(waypoint.value("longitude").toDouble(), 77.2);
+        QCOMPARE(waypoint.value("altitude").toDouble(), 10.0);
     }
 
     void testRemoveWaypoint() {
@@ -52,6 +67,19 @@ private slots:
         m.addWaypoint(28.7, 77.3, 15.0f);
         QStringList errors = m.validate();
         QVERIFY(errors.isEmpty());
+    }
+
+    void testValidateAllowsEquatorAndPrimeMeridian() {
+        Mission m;
+        m.addWaypoint(0.0, 0.0, 10.0f);
+        QVERIFY(m.validate().isEmpty());
+    }
+
+    void testValidateRejectsOutOfRangeCoordinatesAndNonFiniteAltitude() {
+        Mission m;
+        m.addWaypoint(91.0, 181.0, std::numeric_limits<float>::infinity());
+        const QStringList errors = m.validate();
+        QCOMPARE(errors.size(), 3);
     }
 
     void testWaypointToMavlink() {

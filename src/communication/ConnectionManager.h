@@ -16,13 +16,16 @@ class ConnectionManager : public QObject
     Q_OBJECT
     Q_PROPERTY(ConnectionState connectionState READ connectionState NOTIFY connectionStateChanged)
     Q_PROPERTY(QString         description     READ description     NOTIFY connectionStateChanged)
+    // Exposed as a property so QML can bind to it reactively. Also Q_INVOKABLE
+    // so existing `isConnected()` call sites keep working.
+    Q_PROPERTY(bool            isConnected     READ isConnected     NOTIFY connectionStateChanged)
 
 public:
     explicit ConnectionManager(QObject *parent = nullptr);
 
     ConnectionState connectionState() const;
     QString         description() const;
-    bool            isConnected() const;
+    Q_INVOKABLE bool isConnected() const;
 
     Q_INVOKABLE QVariantList availableSerialPorts() const;
     Q_INVOKABLE QStringList  supportedBaudRates() const;

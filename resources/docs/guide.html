@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Indigenous GCS — User Guide</title>
+<style>
+  /* Palette mirrors qml/theme/Colors.qml exactly so the guide looks like
+     part of the application rather than a bolted-on document. */
+  :root {
+    --bg0:        #0d0f14;
+    --bg1:        #13161e;
+    --bg2:        #1a1e2a;
+    --bg3:        #222736;
+    --bg4:        #2a3045;
+    --accent:     #ff9933;
+    --accent-dim: #b36a00;
+    --accent-glow:#2a1a00;
+    --accent-blue:#4a9eff;
+    --accent-green:#138808;
+    --ok:         #00e676;
+    --warning:    #ffab00;
+    --critical:   #ff1744;
+    --emergency:  #ff6d00;
+    --info:       #40c4ff;
+    --text:       #e8ecf4;
+    --text-sec:   #7a8aaa;
+    --text-dis:   #3a4460;
+    --border:     #2a3050;
+    --mono: "SF Mono", "Menlo", "Consolas", "DejaVu Sans Mono", monospace;
+    --ui:   -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg0);
+    color: var(--text);
+    font-family: var(--ui);
+    font-size: 15px;
+    line-height: 1.65;
+  }
+
+  /* ── Layout ─────────────────────────── */
+  .shell { display: flex; min-height: 100vh; }
+
+  nav {
+    width: 250px;
+    flex: 0 0 250px;
+    background: var(--bg1);
+    border-right: 1px solid var(--border);
+    padding: 22px 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  nav .brand {
+    padding: 0 20px 18px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+  nav .brand h1 {
+    font-size: 15px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin: 0;
+    font-family: var(--mono);
+    font-weight: 700;
+  }
+  nav .brand p {
+    margin: 4px 0 0;
+    font-size: 11px;
+    color: var(--text-sec);
+    font-family: var(--mono);
+  }
+
+  nav a {
+    display: block;
+    padding: 7px 20px;
+    color: var(--text-sec);
+    text-decoration: none;
+    font-size: 12.5px;
+    font-family: var(--mono);
+    border-left: 3px solid transparent;
+    transition: background .12s, color .12s;
+  }
+  nav a:hover { background: var(--bg2); color: var(--text); }
+  nav a.active { color: var(--accent); border-left-color: var(--accent); background: var(--bg2); }
+
+  main {
+    flex: 1;
+    max-width: 980px;
+    padding: 40px 48px 120px;
+    min-width: 0;
+  }
+
+  /* ── Typography ─────────────────────── */
+  h2 {
+    font-family: var(--mono);
+    font-size: 21px;
+    color: var(--accent);
+    letter-spacing: 1.5px;
+    margin: 56px 0 6px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    scroll-margin-top: 20px;
+  }
+  h2:first-of-type { margin-top: 0; }
+
+  h3 {
+    font-family: var(--mono);
+    font-size: 15px;
+    color: var(--accent-blue);
+    letter-spacing: .8px;
+    margin: 30px 0 8px;
+  }
+
+  h4 {
+    font-size: 13.5px;
+    color: var(--text);
+    margin: 20px 0 6px;
+    font-weight: 600;
+  }
+
+  p { margin: 10px 0; color: #c8d2e4; }
+
+  a { color: var(--accent-blue); }
+
+  ul, ol { margin: 10px 0; padding-left: 22px; }
+  li { margin: 5px 0; color: #c8d2e4; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--bg3);
+    padding: 1.5px 5px;
+    border-radius: 3px;
+    color: var(--accent);
+  }
+
+  /* ── Code blocks with copy button ───────────────────── */
+  .codeblock {
+    position: relative;
+    margin: 14px 0;
+    background: #08090d;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .codeblock .cb-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 7px 12px;
+  }
+  .codeblock .cb-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-sec);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .codeblock pre {
+    margin: 0;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: #d8e0f0;
+    white-space: pre;
+  }
+  .codeblock pre .c { color: #5a6684; }   /* comment */
+  .codeblock pre .k { color: var(--accent); }
+  .codeblock pre .s { color: var(--ok); }
+
+  .copy {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text-sec);
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all .12s;
+  }
+  .copy:hover { background: var(--accent); border-color: var(--accent); color: var(--bg0); }
+  .copy.done  { background: var(--ok); border-color: var(--ok); color: var(--bg0); }
+
+  /* ── Callouts ───────────────────────── */
+  .note {
+    border-left: 3px solid var(--accent-blue);
+    background: rgba(74,158,255,.07);
+    padding: 11px 16px;
+    margin: 16px 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 14px;
+  }
+  .warn {
+    border-left: 3px solid var(--warning);
+    background: rgba(255,171,0,.07);
+    padding: 11px 16px;
+    margin: 16px 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 14px;
+  }
+  .danger {
+    border-left: 3px solid var(--critical);
+    background: rgba(255,23,68,.09);
+    padding: 11px 16px;
+    margin: 16px 0;
+    border-radius: 0 4px 4px 0;
+    font-size: 14px;
+  }
+  .note strong, .warn strong, .danger strong { font-family: var(--mono); letter-spacing: .5px; }
+  .note  strong { color: var(--accent-blue); }
+  .warn  strong { color: var(--warning); }
+  .danger strong { color: var(--critical); }
+
+  /* ── Tables ─────────────────────────── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13.5px;
+  }
+  th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-sec);
+    border-bottom: 2px solid var(--border);
+    padding: 8px 10px;
+  }
+  td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    color: #c8d2e4;
+    vertical-align: top;
+  }
+  tr:hover td { background: var(--bg1); }
+  td code { font-size: 12px; }
+
+  /* ── Page header ────────────────────── */
+  .hero {
+    border: 1px solid var(--border);
+    background: linear-gradient(160deg, var(--bg2), var(--bg1));
+    border-radius: 8px;
+    padding: 26px 30px;
+    margin-bottom: 34px;
+  }
+  .hero h1 {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: 27px;
+    letter-spacing: 4px;
+    color: var(--accent);
+  }
+  .hero .sub {
+    color: var(--text-sec);
+    font-size: 14px;
+    margin-top: 6px;
+  }
+  .hero .credit {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+  }
+
+  /* ── Badges ─────────────────────────── */
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: .8px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid;
+    vertical-align: middle;
+  }
+  .b-ok    { color: var(--ok);       border-color: var(--ok);       background: rgba(0,230,118,.1); }
+  .b-warn  { color: var(--warning);  border-color: var(--warning);  background: rgba(255,171,0,.1); }
+  .b-crit  { color: var(--critical); border-color: var(--critical); background: rgba(255,23,68,.1); }
+  .b-blue  { color: var(--accent-blue); border-color: var(--accent-blue); background: rgba(74,158,255,.1); }
+
+  .kbd {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    padding: 1px 6px;
+    color: var(--text);
+  }
+
+  hr { border: 0; border-top: 1px solid var(--border); margin: 40px 0; }
+
+  footer {
+    margin-top: 60px;
+    padding-top: 22px;
+    border-top: 1px solid var(--border);
+    color: var(--text-dis);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 1px;
+  }
+
+  @media (max-width: 820px) {
+    nav { display: none; }
+    main { padding: 26px 20px 80px; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+<nav>
+ <div class="brand">
+    <h1>INDIGENOUS GCS</h1>
+    <p>User Guide v1.0.0</p>
+ </div>
+ <a href="#intro">Introduction</a>
+ <a href="#install-mac">Install — macOS</a>
+ <a href="#install-win">Install — Windows</a>
+ <a href="#first-run">First Run</a>
+ <a href="#connecting">Connecting to the FC</a>
+ <a href="#dashboard">Dashboard</a>
+ <a href="#flightdata">Flight Data</a>
+ <a href="#mission">Mission Planner</a>
+ <a href="#parameters">Parameters</a>
+ <a href="#calibration">Calibration</a>
+ <a href="#simulation">Simulator</a>
+ <a href="#logs">Logs</a>
+ <a href="#diagnostics">Diagnostics</a>
+ <a href="#firmware">Firmware</a>
+ <a href="#safety">Safety Rules</a>
+ <a href="#troubleshoot">Troubleshooting</a>
+</nav>
+
+<main>
+
+<div class="hero">
+ <h1>INDIGENOUS GCS</h1>
+ <div class="sub">Cross-platform Ground Control Station for Indigenous ESP32 Flight Controllers</div>
+ <div class="credit">MADE WITH DEDICATION BY GARVIT PANT</div>
+</div>
+
+<!-- ═══════ -->
+<h2 id="intro">1 · Introduction</h2>
+
+<p>
+  Indigenous GCS is a native desktop ground control station for an ESP32-based
+  flight controller. It speaks <strong>MAVLink 2</strong> over serial or UDP,
+  renders live telemetry, plans and uploads missions, reads and writes
+  parameters, logs flights, and includes a built-in simulator so you can
+  exercise every screen without an aircraft.
+</p>
+
+<p>
+  It is built with <strong>C++17 and Qt 6 (QML)</strong>. There is no Python
+  runtime and no browser engine — it is a single native application.
+</p>
+
+<h3>What you can do</h3>
+<table>
+ <tr><th>Capability</th><th>Where</th></tr>
+ <tr><td>Live telemetry: attitude, GPS, battery, speed, heading</td><td>Dashboard, Flight Data</td></tr>
+ <tr><td>Arm / disarm with confirmation</td><td>Dashboard, Flight Data</td></tr>
+ <tr><td>Change flight mode</td><td>Dashboard, Flight Data</td></tr>
+ <tr><td>Plan, validate, upload and download missions</td><td>Mission Planner</td></tr>
+ <tr><td>Read / write / export / import parameters</td><td>Parameters</td></tr>
+ <tr><td>Accelerometer, gyro, mag, level, RC calibration</td><td>Calibration</td></tr>
+ <tr><td>Fly a simulated vehicle with no hardware</td><td>Simulation</td></tr>
+ <tr><td>Record and export flight logs</td><td>Logs</td></tr>
+ <tr><td>MAVLink message inspector and link statistics</td><td>Diagnostics</td></tr>
+ <tr><td>Build and flash ESP32 firmware from the app</td><td>Firmware</td></tr>
+</table>
+
+<div class="note">
+ <strong>NO HARDWARE?</strong> Start the simulator (Simulation page, or
+ <code>IGCS_AUTOSTART_SIM=1</code>). Every screen then shows live data and you
+  can safely explore the whole application.
+</div>
+
+<!-- ═══════ -->
+<h2 id="install-mac">2 · Install &amp; Build — macOS</h2>
+
+<p>
+  These commands install everything needed and put the finished application on
+  your <strong>Desktop</strong>. Copy the whole block into <strong>Terminal</strong>
+  and press Enter. Homebrew is used for Qt 6 and CMake.
+</p>
+
+<div class="warn">
+ <strong>BEFORE YOU START</strong> — you need the Apple Command Line Tools.
+  If you have never built anything on this Mac, run
+ <code>xcode-select --install</code> first and accept the prompt.
+</div>
+
+<h3>One-block install (recommended)</h3>
+
+<div class="codeblock">
+ <div class="cb-head">
+    <span class="cb-title">macOS · Terminal · install + build + copy to Desktop</span>
+    <button class="copy" data-copy="mac-install">COPY</button>
+ </div>
+<pre id="mac-install"><span class="c"># ── 1. Install build tools and Qt 6 (Homebrew) ──────────────────────────</span>
+<span class="c"># Installs Homebrew if it is missing, then Qt 6, CMake and Ninja.</span>
+if ! command -v brew &gt;/dev/null 2&gt;&amp;1; then
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
+brew install qt cmake ninja git
+
+<span class="c"># ── 2. Point CMake at the Homebrew Qt 6 ─────────────────</span>
+QT_PREFIX="$(brew --prefix qt)"
+
+<span class="c"># ── 3. Get the source and build it ──────────────────────</span>
+cd ~/Desktop
+git clone https://github.com/garvitpant/IndigenousGCS.git
+cd IndigenousGCS
+
+cmake -S . -B build -G Ninja \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_PREFIX_PATH="$QT_PREFIX"
+cmake --build build
+
+<span class="c"># ── 4. Run the unit tests ───────────────────────────────</span>
+ctest --test-dir build --output-on-failure
+
+<span class="c"># ── 5. Put the finished app on the Desktop ──────────────────────────────</span>
+rm -rf ~/Desktop/IndigenousGCS.app
+cp -R build/bin/IndigenousGCS.app ~/Desktop/
+
+echo "Done. IndigenousGCS.app is on your Desktop."</pre>
+</div>
+
+<h3>Launch it</h3>
+
+<div class="codeblock">
+ <div class="cb-head">
+    <span class="cb-title">macOS · run</span>
+    <button class="copy" data-copy="mac-run">COPY</button>
+ </div>
+<pre id="mac-run"><span class="c"># Normal launch</span>
+open ~/Desktop/IndigenousGCS.app
+
+<span class="c"># Launch with the simulator already running (no hardware needed)</span>
+IGCS_AUTOSTART_SIM=1 ~/Desktop/IndigenousGCS.app/Contents/MacOS/IndigenousGCS
+
+<span class="c"># If macOS refuses to open it because it is unsigned:</span>
+xattr -dr com.apple.quarantine ~/Desktop/IndigenousGCS.app</pre>
+</div>
+
+<h3>Build a distributable .dmg (optional)</h3>
+
+<div class="codeblock">
+ <div class="cb-head">
+    <span class="cb-title">macOS · package a DMG</span>
+    <button class="copy" data-copy="mac-dmg">COPY</button>
+ </div>
+<pre id="mac-dmg">cd ~/Desktop/IndigenousGCS
+QT_PATH="$(brew --prefix qt)/bin" ./tools/package-macos.sh
+
+<span class="c"># Result: build/IndigenousGCS-1.0.0-macOS.dmg</span>
+<span class="c"># The script bundles the Qt frameworks in, so the DMG runs on a Mac</span>
+<span class="c"># that has never had Qt installed.</span></pre>
+</div>
+
+<div class="note">
+ <strong>APPLE SILICON &amp; INTEL</strong> — Homebrew installs the native
+  build for your Mac. On Apple Silicon you get arm64; on Intel you get x86_64.
+  To produce a build that runs on <em>both</em>, add
+ <code>-DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"</code> to the configure step.
+</div>
+
+<!-- ═══════ -->
+<h2 id="install-win">3 · Install &amp; Build — Windows</h2>
+
+<p>
+  Open <strong>PowerShell</strong> (not Command Prompt) and paste the whole
+  block. It installs the tools with <code>winget</code>, builds the app, and
+  copies the finished folder to your <strong>Desktop</strong>.
+</p>
+
+<div class="warn">
+ <strong>WINDOWS 10 / 11 · 64-BIT ONLY</strong> — <code>winget</code> ships with
+  Windows 11 and recent Windows 10. If <code>winget</code> is not recognised,
+  install <em>App Installer</em> from the Microsoft Store, or install
+  Visual Studio 2022 and Qt manually (see the manual section below).
+</div>
+
+<h3>One-block install (recommended)</h3>
+
+<div class="codeblock">
+ <div class="cb-head">
+    <span class="cb-title">Windows · PowerShell · install + build + copy to Desktop</span>
+    <button class="copy" data-copy="win-install">COPY</button>
+ </div>
+<pre id="win-install"><span class="c"># ── 1. Install the toolchain ────────────────────────────</span>
+<span class="c"># Visual Studio 2022 Build Tools (C++), CMake, Ninja and Git.</span>
+winget install --id Microsoft.VisualStudio.2022.BuildTools --accept-package-agreements --accept-source-agreements --override "--quiet --wait --add Microsoft.VisualStudio.Workload.VCTools --includeRecommended"
+winget install --id Kitware.CMake      --accept-package-agreements --accept-source-agreements
+winget install --id Ninja-build.Ninja  --accept-package-agreements --accept-source-agreements
+winget install --id Git.Git            --accept-package-agreements --accept-source-agreements
+
+<span class="c"># ── 2. Install Qt 6 ─────────────────────</span>
+<span class="c"># aqtinstall fetches Qt without needing the Qt online installer GUI.</span>
+python -m pip install --upgrade pip aqtinstall
+python -m aqt install-qt windows desktop 6.8.3 win64_msvc2022_64 -O C:\Qt
+
+<span class="c"># ── 3. Build the application ────────────────────────────</span>
+<span class="c"># Re-open PowerShell after step 1 so the new tools are on PATH.</span>
+cd $HOME\Desktop
+git clone https://github.com/garvitpant/IndigenousGCS.git
+cd IndigenousGCS
+
+$QtDir = "C:\Qt\6.8.3\msvc2022_64"
+cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_PREFIX_PATH="$QtDir"
+cmake --build build --config Release
+
+<span class="c"># ── 4. Run the unit tests ───────────────────────────────</span>
+ctest --test-dir build -C Release --output-on-failure
+
+<span class="c"># ── 5. Bundle the Qt runtime next to the .exe ───────────────────────────</span>
+& "$QtDir\bin\windeployqt.exe" --release --qmldir qml build\bin\Release\IndigenousGCS.exe
+
+<span class="c"># ── 6. Copy the finished app to the Desktop ─────────────────────────────</span>
+$dest = "$HOME\Desktop\IndigenousGCS-app"
+Remove-Item -Recurse -Force $dest -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Path $dest | Out-Null
+Copy-Item -Recurse "build\bin\Release\*" $dest
+
+Write-Host "Done. Launch it with: $dest\IndigenousGCS.exe"</pre>
+</div>
+
+<h3>Launch it</h3>
+
+<div class="codeblock">
+ <div class="cb-head">
+    <span class="cb-title">Windows · run</span>
+    <button class="copy" data-copy="win-run">COPY</button>
+ </div>
+<pre id="win-run"><span class="c"># Normal launch</span>
+&amp; "$HOME\Desktop\IndigenousGCS-app\IndigenousGCS.exe"
+
+<span class="c"># Launch with the simulator already running (no hardware needed)</span>
+$env:IGCS_AUTOSTART_SIM = "1"
+&amp; "$HOME\Desktop\IndigenousGCS-app\IndigenousGCS.exe"</pre>
+</div>
+
+<h3>Build a Windows installer (optional)</h3>
+
+<div class="codeblock">
+ <div class="cb-head">
+    <span class="cb-title">Windows · NSIS installer</span>
+    <button class="copy" data-copy="win-installer">COPY</button>
+ </div>
+<pre id="win-installer">winget install --id NSIS.NSIS --accept-package-agreements --accept-source-agreements
+
+cd $HOME\Desktop\IndigenousGCS
+.\tools\build-windows.ps1 -QtDir "C:\Qt\6.8.3\msvc2022_64"
+
+<span class="c"># Result: build-windows\IndigenousGCS-1.0.0-Windows.exe</span>
+<span class="c"># That installer sets up Start-menu entries and an uninstaller.</span></pre>
+</div>
+
+<div class="danger">
+ <strong>POWERSHELL BLOCKS THE SCRIPT?</strong> If you see
+ <em>"running scripts is disabled on this system"</em>, run this once in the
+  same window, then retry:
+ <code>Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass</code>
+</div>
+
+<h3>Manual Qt install (if winget/aqt is unavailable)</h3>
+<ol>
+ <li>Install <strong>Visual Studio 2022</strong> with the <em>Desktop development with C++</em> workload.</li>
+ <li>Install <strong>CMake</strong> from <a href="https://cmake.org/download/">cmake.org</a> and tick "Add to PATH".</li>
+ <li>Install <strong>Qt 6.5+</strong> from <a href="https://www.qt.io/download">qt.io</a>, selecting the <em>MSVC 2022 64-bit</em> kit plus <em>Qt Quick</em>, <em>Qt Quick Controls</em>, <em>Qt Location</em>, <em>Qt Positioning</em>, <em>Qt SerialPort</em> and <em>Qt SQL</em>.</li>
+ <li>Re-run the build block from step 3 above, adjusting <code>$QtDir</code>.</li>
+</ol>
+
+<!-- ═══════ -->
+<h2 id="first-run">4 · First Run</h2>
+
+<p>
+  On launch you get a short splash, then the <strong>Dashboard</strong>. The app
+  never connects to anything by itself — you always choose the link.
+</p>
+
+<p>The window is laid out in four bands:</p>
+
+<table>
+ <tr><th>Band</th><th>What it shows</th></tr>
+ <tr><td><strong>Top bar</strong></td><td>App name, link state, vehicle identity</td></tr>
+ <tr><td><strong>Left sidebar</strong></td><td>Navigation between the 12 pages</td></tr>
+ <tr><td><strong>Centre</strong></td><td>The active page</td></tr>
+ <tr><td><strong>Status bar</strong></td><td>GPS, battery, link rate, mode, arm state, altitude, speed, heading, CPU, heartbeat age</td></tr>
+</table>
+
+<p>
+  Minimum useful window size is <strong>1280×720</strong>; 1920×1080 is
+  recommended. Everything scales with high-DPI displays.
+</p>
+
+<!-- ═══════ -->
+<h2 id="connecting">5 · Connecting to the Flight Controller</h2>
+
+<p>Click <strong>CONNECT FC</strong> on the Dashboard. The Link Setup dialog opens with two tabs.</p>
+
+<h3>Serial (USB)</h3>
+<ol>
+ <li>Plug the ESP32 in with a USB data cable.</li>
+ <li>Press the refresh ⟳ button; your port appears in the list with its description and manufacturer.</li>
+ <li>Select the <strong>baud rate</strong>. ESP32 MAVLink bridges commonly use <code>115200</code>.</li>
+ <li>Click <strong>CONNECT</strong>.</li>
+</ol>
+
+<h3>UDP (network / Wi-Fi telemetry)</h3>
+<ol>
+ <li>Switch to the <strong>UDP</strong> tab.</li>
+ <li>Set the host to <code>0.0.0.0</code> to listen on every interface.</li>
+ <li>Set the port — <code>14550</code> is the MAVLink convention.</li>
+ <li>Click <strong>CONNECT</strong>.</li>
+</ol>
+
+<div class="note">
+ <strong>LISTENING IS NOT CONNECTED</strong> — opening a UDP socket only means
+  the app is listening. The vehicle is reported as detected only after a valid
+  MAVLink <code>HEARTBEAT</code> arrives. If the heartbeat stops for 5 seconds
+  the link is declared lost and the UI says so rather than pretending.
+</div>
+
+<h3>Link states</h3>
+<table>
+ <tr><th>State</th><th>Meaning</th></tr>
+ <tr><td><span class="badge b-crit">DISCONNECTED</span></td><td>No transport open</td></tr>
+ <tr><td><span class="badge b-warn">CONNECTING</span></td><td>Port/socket opening</td></tr>
+ <tr><td><span class="badge b-ok">CONNECTED</span></td><td>Heartbeats arriving normally</td></tr>
+ <tr><td><span class="badge b-warn">DEGRADED</span></td><td>Heartbeats late or packets dropping</td></tr>
+ <tr><td><span class="badge b-crit">LOST</span></td><td>No heartbeat for 5 s</td></tr>
+</table>
+
+<!-- ═══════ -->
+<h2 id="dashboard">6 · Dashboard</h2>
+
+<p>The at-a-glance page. It shows only real telemetry — nothing is hardcoded.</p>
+
+<h3>Controls on this page</h3>
+<table>
+ <tr><th>Control</th><th>Action</th></tr>
+ <tr><td><strong>CONNECT FC</strong></td><td>Opens Link Setup</td></tr>
+ <tr><td><strong>ARM</strong></td><td>Sends <code>MAV_CMD_COMPONENT_ARM_DISARM</code> after confirmation</td></tr>
+ <tr><td><strong>DISARM</strong></td><td>Sends the disarm command after confirmation</td></tr>
+ <tr><td><strong>Mode selector</strong></td><td>Requests a flight-mode change; shows an error if the FC rejects it</td></tr>
+</table>
+
+<h3>What is displayed</h3>
+<ul>
+ <li><strong>Attitude</strong> — roll, pitch, yaw</li>
+ <li><strong>Position</strong> — latitude, longitude, altitude MSL, altitude relative</li>
+ <li><strong>Speed</strong> — ground speed, air speed, climb rate</li>
+ <li><strong>GPS</strong> — fix type, satellite count, HDOP</li>
+ <li><strong>Battery</strong> — voltage, current, remaining %</li>
+ <li><strong>System</strong> — CPU load, flight mode, arm state</li>
+ <li><strong>Sensor health</strong> — per-sensor present / enabled / healthy bits</li>
+</ul>
+
+<div class="warn">
+ <strong>ARMING IS REAL</strong> — ARM spins propellers on a real aircraft.
+  The confirmation dialog is not decoration. Remove props when testing on the
+  bench.
+</div>
+
+<!-- ═══════ -->
+<h2 id="flightdata">7 · Flight Data</h2>
+
+<p>
+  The instrument page. Left side is the HUD and compass; right side is a live
+  map with a telemetry card grid beneath it.
+</p>
+
+<h3>Artificial Horizon</h3>
+<ul>
+ <li>Sky and ground rotate with <strong>roll</strong>; the ladder slides with <strong>pitch</strong></li>
+ <li>Heading tape across the top with cardinal marks</li>
+ <li>Speed tape on the left, altitude tape on the right with a climb-rate bar</li>
+ <li>Bottom strip: flight mode, GPS status, battery, and an armed badge that pulses red when armed</li>
+</ul>
+
+<h3>Map</h3>
+<ul>
+ <li>Real OpenStreetMap tiles — no API key, no signup</li>
+ <li><strong>Drag</strong> to pan, <strong>scroll wheel</strong> to zoom, <strong>pinch</strong> on a trackpad</li>
+ <li><strong>+</strong> / <strong>−</strong> buttons for discrete zoom steps</li>
+ <li>The view follows the vehicle while it has a GPS fix</li>
+</ul>
+
+<h3>Telemetry cards</h3>
+<p>
+  Twelve live readouts: ground speed, air speed, relative altitude, climb,
+  GPS fix, satellites, battery %, voltage, RC RSSI, CPU, heading, altitude MSL.
+  Values that the flight controller does not report show <code>—</code> rather
+  than a misleading zero.
+</p>
+
+<h3>ARM / DISARM</h3>
+<p>
+  Same behaviour as the Dashboard: a confirmation dialog, then a real MAVLink
+  command, then verification against telemetry.
+</p>
+
+<!-- ═══════ -->
+<h2 id="mission">8 · Mission Planner</h2>
+
+<h3>Planning a mission</h3>
+<ol>
+ <li>Click <strong>ADD WAYPOINT</strong> to arm placement mode.</li>
+ <li>Set the <strong>altitude</strong> in the altitude field first.</li>
+ <li>Click anywhere on the map — a numbered waypoint is placed there.</li>
+ <li>Repeat. Click <strong>ADD WAYPOINT</strong> again to leave placement mode.</li>
+ <li>Click <strong>VALIDATE</strong> to check the plan before uploading.</li>
+</ol>
+
+<h3>Navigating the map</h3>
+<table>
+ <tr><th>Gesture</th><th>Result</th></tr>
+ <tr><td>Click and drag</td><td>Pan the map</td></tr>
+ <tr><td>Scroll wheel</td><td>Zoom in / out around the cursor</td></tr>
+ <tr><td>Two-finger pinch</td><td>Zoom (trackpad)</td></tr>
+ <tr><td><strong>+</strong> / <strong>−</strong></td><td>Step zoom</td></tr>
+ <tr><td><strong>CENTER VEHICLE</strong></td><td>Jump to the vehicle position</td></tr>
+ <tr><td><strong>RELOAD MAP</strong></td><td>Re-fetch tiles if the map looks blank</td></tr>
+</table>
+
+<p>
+  On startup the map opens centred on <strong>your computer's location</strong>
+  (resolved from your network address), falling back to New Delhi if your
+  location cannot be determined.
+</p>
+
+<h3>Mission validation checks</h3>
+<ul>
+ <li>Empty mission</li>
+ <li>Coordinates out of range</li>
+ <li>Missing or invalid home position</li>
+ <li>Negative or implausible altitude</li>
+ <li>Duplicate waypoints</li>
+ <li>Unsupported command types</li>
+ <li>Unsafe mission structure (e.g. no landing at the end)</li>
+</ul>
+
+<h3>Transfer operations</h3>
+<table>
+ <tr><th>Button</th><th>MAVLink behaviour</th></tr>
+ <tr><td><strong>UPLOAD</strong></td><td><code>MISSION_COUNT</code> → <code>MISSION_REQUEST_INT</code> → <code>MISSION_ITEM_INT</code> → <code>MISSION_ACK</code>, with retries</td></tr>
+ <tr><td><strong>DOWNLOAD</strong></td><td><code>MISSION_REQUEST_LIST</code> → item requests → local store</td></tr>
+ <tr><td><strong>CLEAR FC</strong></td><td><code>MISSION_CLEAR_ALL</code> and waits for acknowledgement</td></tr>
+</table>
+
+<div class="note">
+ <strong>SIMULATOR CANNOT RECEIVE MISSIONS</strong> — the upload and clear
+  buttons stay disabled while only the simulator is connected. The page says so
+  explicitly instead of faking a successful transfer.
+</div>
+
+<!-- ═══════ -->
+<h2 id="parameters">9 · Parameters</h2>
+
+<p>A two-panel page: parameter groups on the left, the parameter table on the right.</p>
+
+<h3>Reading parameters</h3>
+<ol>
+ <li>Connect a real flight controller.</li>
+ <li>Click <strong>REQUEST</strong>. A progress bar fills as
+      <code>PARAM_VALUE</code> messages arrive.</li>
+</ol>
+
+<h3>Finding a parameter</h3>
+<ul>
+ <li><strong>Search box</strong> — filters by name as you type</li>
+ <li><strong>Group list</strong> — groups by the prefix before the first underscore, with counts</li>
+</ul>
+
+<h3>Changing a parameter</h3>
+<ol>
+ <li>Edit the value field in the row.</li>
+ <li>Press <kbd>Enter</kbd> — the row is marked <span class="badge b-warn">MODIFIED</span> and the value is sent with <code>PARAM_SET</code>.</li>
+ <li>On acknowledgement the row flashes <span class="badge b-ok">SENT</span>.</li>
+</ol>
+
+<p>
+ <strong>SEND ALL CHANGES</strong> re-sends every outstanding edit — useful if
+  one was missed.
+</p>
+
+<h3>Export and import</h3>
+<p>
+ <strong>EXPORT</strong> writes a tab-separated file with a header
+  (<code>name</code>, <code>value</code>, <code>type</code>), one parameter per
+  line. The importer reads the same format, so you can diff two vehicles'
+  configurations in any text editor or spreadsheet.
+</p>
+
+<!-- ═══════ -->
+<h2 id="calibration">10 · Calibration</h2>
+
+<p>Each calibration talks to the flight controller over MAVLink. Nothing is simulated.</p>
+
+<table>
+ <tr><th>Procedure</th><th>Method</th></tr>
+ <tr><td>Accelerometer</td><td><code>MAV_CMD_PREFLIGHT_CALIBRATION</code> — level, then 6 orientations</td></tr>
+ <tr><td>Gyroscope</td><td><code>MAV_CMD_PREFLIGHT_CALIBRATION</code> — keep the aircraft still</td></tr>
+ <tr><td>Magnetometer</td><td><code>MAV_CMD_PREFLIGHT_CALIBRATION</code> — rotate through all axes</td></tr>
+ <tr><td>Level horizon</td><td>Stores the current attitude as level</td></tr>
+ <tr><td>Radio / RC</td><td>Reads <code>RC_CHANNELS</code> and shows stick travel and endpoints</td></tr>
+ <tr><td>ESC / output</td><td>Reads <code>SERVO_OUTPUT_RAW</code> for output verification</td></tr>
+</table>
+
+<p>
+  Progress and result text comes from the flight controller's
+ <code>STATUSTEXT</code> messages, shown live. If your firmware does not
+  implement a procedure, the page reports
+ <em>"Not supported by connected firmware."</em>
+</p>
+
+<div class="danger">
+ <strong>REMOVE PROPELLERS</strong> before any accelerometer, gyro, magnetometer
+  or ESC calibration. Some calibration commands can spin motors.
+</div>
+
+<!-- ═══════ -->
+<h2 id="simulation">11 · Simulator</h2>
+
+<p>
+  The simulator generates realistic MAVLink telemetry and feeds it through the
+  real parser, so the whole application can be exercised with no hardware.
+</p>
+
+<h3>Starting it</h3>
+<ul>
+ <li><strong>In the app:</strong> Simulation page → <strong>START</strong></li>
+ <li><strong>At launch:</strong> set <code>IGCS_AUTOSTART_SIM=1</code> before starting the binary</li>
+</ul>
+
+<h3>What it simulates</h3>
+<ul>
+ <li>Heartbeat, system status, GPS, attitude, position, battery, RC channels, status text</li>
+ <li>Flight phases: idle → takeoff → waypoint flight → hold → RTL → land</li>
+ <li>Drifting battery voltage and current, satellite count, and CPU load</li>
+</ul>
+
+<p>
+  When running, a yellow <strong>SIMULATION MODE — NO REAL AIRCRAFT</strong>
+  banner appears at the top of the relevant pages. The simulator never touches
+  motors or a serial port.
+</p>
+
+<div class="warn">
+ <strong>UPLOAD IS BLOCKED IN SIM</strong> — mission upload, parameter download
+  and arm/disarm are disabled for a simulated vehicle, because there is no
+  flight controller to obey them. This is deliberate.
+</div>
+
+<!-- ═══════ -->
+<h2 id="logs">12 · Logs</h2>
+
+<p>Telemetry logging is stored in SQLite so large sessions stay queryable.</p>
+
+<ol>
+ <li>Click <strong>START LOGGING</strong> to open a session.</li>
+ <li>Fly. Telemetry is written at 1 Hz plus every status message.</li>
+ <li>Click <strong>STOP LOGGING</strong> to close the session.</li>
+ <li>Pick a session in the list and click <strong>EXPORT</strong> to write it out.</li>
+</ol>
+
+<p>Each session table shows timestamp, altitude, speed, flight mode and arm state.</p>
+
+<!-- ═══════ -->
+<h2 id="diagnostics">13 · Diagnostics</h2>
+
+<p>The page for when something is not working.</p>
+
+<table>
+ <tr><th>Readout</th><th>Meaning</th></tr>
+ <tr><td>Packets / second</td><td>Inbound MAVLink rate</td></tr>
+ <tr><td>Received / sent</td><td>Cumulative message counters</td></tr>
+ <tr><td>Dropped</td><td>Frames that failed CRC or parsing</td></tr>
+ <tr><td>Heartbeat age</td><td>Seconds since the last heartbeat</td></tr>
+ <tr><td>Sensor health</td><td>12-sensor present / enabled / healthy bitmask</td></tr>
+</table>
+
+<h3>MAVLink Inspector</h3>
+<p>
+  Lists every message ID seen, with its name, frequency, time of last receipt
+  and current field values. Use it to confirm the flight controller is actually
+  sending what you expect — for example that <code>GPS_RAW_INT</code> is
+  arriving at all.
+</p>
+
+<h3>Status text log</h3>
+<p>
+  The last 50 <code>STATUSTEXT</code> messages with severity colouring:
+ <span class="badge b-ok">INFO</span>
+ <span class="badge b-warn">WARNING</span>
+ <span class="badge b-crit">CRITICAL</span>
+</p>
+
+<!-- ═══════ -->
+<h2 id="firmware">14 · Firmware</h2>
+
+<p>
+  Builds an Arduino sketch with <code>arduino-cli</code> and flashes it to the
+  ESP32 over USB.
+</p>
+
+<ol>
+ <li>Install <code>arduino-cli</code> and let the app auto-detect it, or enter the path.</li>
+ <li>Click <strong>LOAD BOARDS</strong> to fetch the installed board list.</li>
+ <li>Search and pick your board (for example an ESP32 Dev Module).</li>
+ <li>Select the serial port and baud rate.</li>
+ <li>Edit the sketch in the built-in editor.</li>
+ <li>Click <strong>COMPILE &amp; FLASH</strong>. Compile and flash logs stream live.</li>
+</ol>
+
+<div class="danger">
+ <strong>FLASHING IS A WRITE OPERATION</strong> — do not disconnect power or
+  USB during flashing. Never flash a flight controller with propellers fitted.
+</div>
+
+<!-- ═══════ -->
+<h2 id="safety">15 · Safety Rules</h2>
+
+<p>The ground station is <strong>not</strong> the primary flight-safety system. Your ESP32 firmware must implement its own failsafes independently.</p>
+
+<div class="danger">
+ <strong>NON-NEGOTIABLE</strong>
+ <ul style="margin-top:8px">
+    <li>Never arm with propellers fitted unless the aircraft is restrained and the area is clear.</li>
+    <li>Never rely on this application for stabilisation or emergency control.</li>
+    <li>Never assume GPS is valid — check the fix type and satellite count.</li>
+    <li>Never assume telemetry is valid — watch the heartbeat age.</li>
+    <li>The app never auto-arms, auto-launches, or auto-starts a mission. All of that is your explicit action.</li>
+ </ul>
+</div>
+
+<h3>Built-in safety behaviour</h3>
+<ul>
+ <li>ARM, DISARM, RTL, LAND, mission start and firmware flashing all require confirmation.</li>
+ <li>Lost heartbeat is shown prominently and the vehicle is not reported as connected.</li>
+ <li>Battery, GPS, attitude and link warnings use four severity levels: INFO, WARNING, CRITICAL, EMERGENCY.</li>
+ <li>Safety-critical messages are never silently discarded.</li>
+</ul>
+
+<!-- ═══════ -->
+<h2 id="troubleshoot">16 · Troubleshooting</h2>
+
+<table>
+ <tr><th>Symptom</th><th>Cause &amp; fix</th></tr>
+ <tr>
+    <td>No serial ports listed</td>
+    <td>Install the USB-serial driver for your ESP32 board (CP210x or CH340), then press ⟳. Check the cable is a data cable, not charge-only.</td>
+ </tr>
+ <tr>
+    <td>Port opens but no telemetry</td>
+    <td>Wrong baud rate. Try 115200, then 57600. Confirm the firmware is sending <code>HEARTBEAT</code>.</td>
+ </tr>
+ <tr>
+    <td>Link shows CONNECTED but no data</td>
+    <td>The status bar's <code>HB</code> field tells you the truth — if it climbs past 5 s the link is lost.</td>
+ </tr>
+ <tr>
+    <td>Map tiles are blank</td>
+    <td>The app needs outbound HTTPS to <code>tile.openstreetmap.org</code>. A corporate proxy or firewall will block it. Click <strong>RELOAD MAP</strong>.</td>
+ </tr>
+ <tr>
+    <td>Values show <code>—</code></td>
+    <td>That field is genuinely not being reported by the flight controller. Check the MAVLink Inspector on Diagnostics.</td>
+ </tr>
+ <tr>
+    <td>macOS: "app is damaged"</td>
+    <td><code>xattr -dr com.apple.quarantine ~/Desktop/IndigenousGCS.app</code></td>
+ </tr>
+ <tr>
+    <td>Windows: missing DLL on another PC</td>
+    <td>Copy the whole folder, not just the .exe. The Qt DLLs must sit beside it.</td>
+ </tr>
+ <tr>
+    <td>Windows: app closes instantly</td>
+    <td>Run it from PowerShell to see the error, and confirm <code>windeployqt</code> completed without warnings.</td>
+ </tr>
+ <tr>
+    <td>Build: Qt6 not found</td>
+    <td>Pass <code>-DCMAKE_PREFIX_PATH</code> pointing at your Qt kit directory.</td>
+ </tr>
+ <tr>
+    <td>Build: Qt6Location not found</td>
+    <td>Add <em>Qt Location</em> and <em>Qt Positioning</em> in the Qt Maintenance Tool.</td>
+ </tr>
+ <tr>
+    <td>PowerShell script blocked</td>
+    <td><code>Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass</code></td>
+ </tr>
+ <tr>
+    <td>Antivirus interferes with build</td>
+    <td>Exclude the project and build directories.</td>
+ </tr>
+</table>
+
+<hr>
+
+<h3>Documentation index</h3>
+<ul>
+ <li><code>docs/architecture.md</code> — module layout and threading model</li>
+ <li><code>docs/mavlink.md</code> — messages used, custom dialect</li>
+ <li><code>docs/esp32-integration.md</code> — what your firmware must implement</li>
+ <li><code>docs/mission-system.md</code> — mission file format and transfer flow</li>
+ <li><code>docs/build-macos.md</code> — detailed macOS build notes</li>
+ <li><code>docs/build-windows.md</code> — detailed Windows build notes</li>
+</ul>
+
+<footer>
+  INDIGENOUS GCS v1.0.0 — CROSS-PLATFORM GROUND CONTROL STATION<br>
+  MADE WITH DEDICATION BY GARVIT PANT
+</footer>
+
+</main>
+</div>
+
+<script>
+// Copy-to-clipboard for every code block. Falls back to a hidden textarea
+// when the async clipboard API is unavailable (older WebEngine, file:// pages).
+document.querySelectorAll('.copy').forEach(function (btn) {
+  btn.addEventListener('click', function () {
+    var pre = document.getElementById(btn.dataset.copy);
+    if (!pre) return;
+    var text = pre.innerText;
+
+    function done() {
+      var old = btn.textContent;
+      btn.textContent = 'COPIED';
+      btn.classList.add('done');
+      setTimeout(function () {
+        btn.textContent = old;
+        btn.classList.remove('done');
+      }, 1600);
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(function () { fallback(text, done); });
+    } else {
+      fallback(text, done);
+    }
+  });
+});
+
+function fallback(text, done) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); done(); } catch (e) { /* ignore */ }
+  document.body.removeChild(ta);
+}
+
+// Highlight the sidebar entry for the section currently in view.
+var links = Array.prototype.slice.call(document.querySelectorAll('nav a'));
+var sections = links
+  .map(function (a) { return document.querySelector(a.getAttribute('href')); })
+  .filter(Boolean);
+
+function sync() {
+  var best = null, bestTop = -Infinity;
+  sections.forEach(function (s) {
+    var top = s.getBoundingClientRect().top;
+    if (top <= 90 && top > bestTop) { bestTop = top; best = s; }
+  });
+  links.forEach(function (a) {
+    a.classList.toggle('active', best && a.getAttribute('href') === '#' + best.id);
+  });
+}
+
+window.addEventListener('scroll', sync, { passive: true });
+window.addEventListener('load', sync);
+</script>
+</body>
+</html>

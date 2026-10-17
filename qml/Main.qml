@@ -60,9 +60,12 @@ ApplicationWindow {
                     width: Math.min(parent.width * 0.42, 360)
                     height: width
                     fillMode: Image.PreserveAspectFit
-                    opacity: Colors.lightTheme ? 0.18 : 0.16
+                    opacity: Colors.lightTheme ? 0.10 : 0.09
                     smooth: true
-                    z: 2
+                    // Behind the page loader (z 0 < 1) so it never paints over
+                    // telemetry, and non-interactive so map panning still works.
+                    z: 0
+                    enabled: false
                     visible: status === Image.Ready
                 }
 
@@ -93,7 +96,7 @@ ApplicationWindow {
         }
         Text { anchors.horizontalCenter: parent.horizontalCenter; anchors.top: parent.verticalCenter; anchors.topMargin: 135; text: "INDIGENOUS GCS"; color: Colors.accent; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeLarge; font.bold: true; font.letterSpacing: 3 }
         Text { anchors.horizontalCenter: parent.horizontalCenter; anchors.top: parent.verticalCenter; anchors.topMargin: 170; text: "MADE WITH DEDICATION BY GARVIT PANT"; color: Colors.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeSmall; font.letterSpacing: 1 }
-        Timer { id: splashTimer; interval: 5000; onTriggered: splash.visible = false }
+        Timer { id: splashTimer; interval: 800; onTriggered: splash.visible = false }
     }
 
     // Safety banner
@@ -133,13 +136,16 @@ ApplicationWindow {
         TapHandler { onTapped: safetyBanner.visible = false }
     }
 
-    // Page components
+    // Page components. Order MUST match the SideBar entries below:
+    // DASHBOARD, FLIGHT DATA, MISSION, PARAMETERS, INAV, CALIBRATION, VEHICLE,
+    // FIRMWARE, SIMULATION, LOGS, DIAGNOSTICS, SETTINGS
     readonly property var pages: [
-        dashboardComp, missionComp, paramsComp, inavComp,
-        calibComp, vehicleComp, logsComp, firmwareComp, simComp, diagComp, settingsComp
+        dashboardComp, flightDataComp, missionComp, paramsComp, inavComp,
+        calibComp, vehicleComp, firmwareComp, simComp, logsComp, diagComp, settingsComp
     ]
 
     Component { id: dashboardComp;  Dashboard   {} }
+    Component { id: flightDataComp; FlightData  {} }
     Component { id: missionComp;    MissionPlanner {} }
     Component { id: paramsComp;     Parameters  {} }
     Component { id: inavComp;       InavConfigurator {} }

@@ -4,6 +4,8 @@
 #include <QProcess>
 #include <QTemporaryDir>
 #include <QStringList>
+#include <QHash>
+#include <QVariantList>
 
 namespace IndigenousGCS {
 
@@ -31,6 +33,11 @@ class FirmwareManager : public QObject
 
     // Available serial ports for flashing
     Q_PROPERTY(QStringList serialPorts READ serialPorts     NOTIFY serialPortsChanged)
+    Q_PROPERTY(QStringList availableBoards READ availableBoards NOTIFY availableBoardsChanged)
+    Q_PROPERTY(QVariantList boardPickerItems READ boardPickerItems NOTIFY availableBoardsChanged)
+    Q_PROPERTY(QString arduinoCliPath READ arduinoCliPath WRITE setArduinoCliPath NOTIFY arduinoCliPathChanged)
+    Q_PROPERTY(bool arduinoCliAvailable READ arduinoCliAvailable NOTIFY arduinoCliPathChanged)
+    Q_PROPERTY(QString boardListStatus READ boardListStatus NOTIFY boardListStatusChanged)
 
     // Board selection
     Q_PROPERTY(QString selectedBoard   READ selectedBoard   WRITE setSelectedBoard   NOTIFY selectedBoardChanged)
@@ -55,6 +62,11 @@ public:
     QString flashLog()        const { return m_flashLog; }
 
     QStringList serialPorts() const { return m_serialPorts; }
+    QStringList availableBoards() const { return m_availableBoards; }
+    QVariantList boardPickerItems() const { return m_boardPickerItems; }
+    QString arduinoCliPath() const { return m_arduinoCliPath; }
+    bool arduinoCliAvailable() const;
+    QString boardListStatus() const { return m_boardListStatus; }
 
     QString selectedBoard()   const { return m_selectedBoard; }
     QString selectedPort()    const { return m_selectedPort; }
@@ -63,9 +75,12 @@ public:
     void setSelectedBoard(const QString &b) { if (m_selectedBoard != b) { m_selectedBoard = b; emit selectedBoardChanged(); } }
     void setSelectedPort(const QString &p)  { if (m_selectedPort  != p) { m_selectedPort  = p; emit selectedPortChanged();  } }
     void setFlashBaud(int baud)             { if (m_flashBaud     != baud) { m_flashBaud  = baud; emit flashBaudChanged();  } }
+    void setArduinoCliPath(const QString &path);
 
     Q_INVOKABLE void requestFirmwareInfo(uint8_t targetSys, uint8_t targetComp);
     Q_INVOKABLE void refreshSerialPorts();
+    Q_INVOKABLE void refreshBoards();
+    Q_INVOKABLE QString boardFqbn(const QString &displayName) const;
 
     // Compile Arduino sketch source code → binary
     Q_INVOKABLE void compileSketch(const QString &sketchCode);
@@ -78,10 +93,6 @@ public:
 
     Q_INVOKABLE void cancelOperation();
 
-    // Returns list of supported ESP32 board FQBNs
-    Q_INVOKABLE QStringList supportedBoards() const;
-    Q_INVOKABLE QString boardFqbn(const QString &displayName) const;
-
 signals:
     void firmwareInfoChanged();
     void compilingChanged();
@@ -92,6 +103,9 @@ signals:
     void flashProgressChanged();
     void flashLogChanged();
     void serialPortsChanged();
+    void availableBoardsChanged();
+    void arduinoCliPathChanged();
+    void boardListStatusChanged();
     void selectedBoardChanged();
     void selectedPortChanged();
     void flashBaudChanged();
@@ -103,12 +117,17 @@ private slots:
     void onCompileFinished(int exitCode, QProcess::ExitStatus status);
     void onFlashReadyRead();
     void onFlashFinished(int exitCode, QProcess::ExitStatus status);
+    void onBoardListFinished(int exitCode, QProcess::ExitStatus status);
 
 private:
     void appendCompileLog(const QString &text);
     void appendFlashLog(const QString &text);
     QString findArduinoCli() const;
-    QString findEsptool() const;
+    // Built-in board list used when Arduino CLI is unavailable. Keeps the board
+    // picker usable (ESP32 + common dev boards) without requiring the CLI.
+    void applyFallbackBoards(const QString &reason);
+    void uploadCompiledSketch(const QString &port);
+    void setBoardListStatus(const QString &message);
 
     MAVLinkManager     *m_mavlink;
     QString             m_version;
@@ -125,12 +144,18 @@ private:
     QString             m_flashLog;
 
     QStringList         m_serialPorts;
-    QString             m_selectedBoard   = "esp32:esp32:esp32";
+    QStringList         m_availableBoards;
+    QVariantList        m_boardPickerItems;
+    QHash<QString, QString> m_boardFqbnByName;
+    QString             m_arduinoCliPath;
+    QString             m_boardListStatus;
+    QString             m_selectedBoard;
     QString             m_selectedPort;
     int                 m_flashBaud       = 921600;
 
     QProcess           *m_compileProcess  = nullptr;
     QProcess           *m_flashProcess    = nullptr;
+    QProcess           *m_boardProcess    = nullptr;
     QTemporaryDir      *m_buildDir        = nullptr;
 
     bool                m_flashAfterCompile = false;

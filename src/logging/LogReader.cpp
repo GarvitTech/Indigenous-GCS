@@ -69,4 +69,29 @@ QVariantList LogReader::readSession(qint64 sessionId) const
     return result;
 }
 
+bool LogReader::clearSessions()
+{
+    if (!m_db.isOpen()) {
+        qCWarning(lcLogReader) << "Cannot clear logs: database is not open";
+        return false;
+    }
+    if (!m_db.transaction()) {
+        qCWarning(lcLogReader) << "Cannot start log deletion transaction:" << m_db.lastError().text();
+        return false;
+    }
+
+    QSqlQuery q(m_db);
+    if (!q.exec("DELETE FROM telemetry") || !q.exec("DELETE FROM sessions")) {
+        qCWarning(lcLogReader) << "Cannot clear logs:" << q.lastError().text();
+        m_db.rollback();
+        return false;
+    }
+    if (!m_db.commit()) {
+        qCWarning(lcLogReader) << "Cannot commit log deletion:" << m_db.lastError().text();
+        m_db.rollback();
+        return false;
+    }
+    return true;
+}
+
 } // namespace IndigenousGCS

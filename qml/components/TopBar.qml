@@ -117,16 +117,20 @@ Rectangle {
             spacing: 4; Layout.alignment: Qt.AlignVCenter
             Rectangle {
                 width: 8; height: 8; radius: 4; anchors.verticalCenter: parent.verticalCenter
-                color: MAVLinkManager && MAVLinkManager.hasVehicle ? Colors.ok : Colors.textDisabled
+                color: MAVLinkManager && MAVLinkManager.hasPhysicalVehicle ? Colors.ok
+                     : MAVLinkManager && MAVLinkManager.hasVehicle ? Colors.warning : Colors.textDisabled
                 SequentialAnimation on opacity {
-                    running: MAVLinkManager && MAVLinkManager.hasVehicle; loops: Animation.Infinite
+                    running: MAVLinkManager && MAVLinkManager.hasPhysicalVehicle; loops: Animation.Infinite
                     NumberAnimation { to: 0.3; duration: 500 }
                     NumberAnimation { to: 1.0; duration: 500 }
                 }
             }
             Text {
-                text: MAVLinkManager && MAVLinkManager.hasVehicle ? MAVLinkManager.packetsPerSecond.toFixed(0) + " Hz" : "NO FC LINK"
-                color: MAVLinkManager && MAVLinkManager.hasVehicle ? Colors.ok : Colors.textDisabled
+                text: MAVLinkManager && MAVLinkManager.hasPhysicalVehicle
+                      ? MAVLinkManager.packetsPerSecond.toFixed(0) + " Hz"
+                      : MAVLinkManager && MAVLinkManager.hasVehicle ? "SIMULATION ONLY" : "NO FC LINK"
+                color: MAVLinkManager && MAVLinkManager.hasPhysicalVehicle ? Colors.ok
+                     : MAVLinkManager && MAVLinkManager.hasVehicle ? Colors.warning : Colors.textDisabled
                 font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily; font.bold: true
             }
         }

@@ -12,20 +12,29 @@ Rectangle {
     property string lastResponse: "No MSP response received"
     property int responseCommand: -1
     property var serialPorts: []
-    property int rollP: 40
-    property int rollI: 30
-    property int rollD: 23
-    property int pitchP: 40
-    property int pitchI: 30
-    property int pitchD: 23
-    property int yawP: 40
-    property int yawI: 30
+    property int rollP: 0
+    property int rollI: 0
+    property int rollD: 0
+    property int pitchP: 0
+    property int pitchI: 0
+    property int pitchD: 0
+    property int yawP: 0
+    property int yawI: 0
     property int yawD: 0
 
     function refreshPorts() {
         serialPorts = ConnectionManager.availableSerialPorts()
     }
 
+    // Ports on macOS/Windows are frequently enumerated only after the serial
+    // subsystem has been touched, so refresh periodically until the user
+    // connects. The timer stops while connected to avoid disturbing the link.
+    Timer {
+        interval: 2000
+        repeat: true
+        running: !ConnectionManager.isConnected
+        onTriggered: root.refreshPorts()
+    }
     Component.onCompleted: refreshPorts()
 
     Connections {
@@ -33,6 +42,15 @@ Rectangle {
         function onResponseReceived(command, payload) {
             root.responseCommand = command
             root.lastResponse = "MSP " + command + " response  |  " + payload.length + " bytes  |  " + payload.toHex(" ")
+        }
+        function onPidChanged() {
+            const profile = MSPManager.pidValues
+            if (profile.length >= 9) {
+                root.rollP = profile[0]; root.rollI = profile[1]; root.rollD = profile[2]
+                root.pitchP = profile[3]; root.pitchI = profile[4]; root.pitchD = profile[5]
+                root.yawP = profile[6]; root.yawI = profile[7]; root.yawD = profile[8]
+                root.lastResponse = "PID profile read: " + profile.length + " values. Changes are local until written."
+            }
         }
         function onRequestTimedOut(command) {
             root.lastResponse = "MSP " + command + " timed out"
@@ -135,7 +153,7 @@ Rectangle {
                 subtitle: "Identify the flight controller and read its live status before changing configuration."
                 commands: [
                     ["API VERSION", 1], ["FC VARIANT", 2], ["FC VERSION", 3],
-                    ["BOARD INFO", 4], ["BUILD INFO", 5], ["STATUS", 101], ["ATTITUDE", 108], ["ALTITUDE", 109]
+                    ["BOARD INFO", 4], ["BUILD INFO", 5], ["STATUS", 101], ["ATTITUDE", 108]
                 ]
             }
             InavPanel { title: "CONFIGURATION"; subtitle: "Read configuration data from the connected INAV flight controller."; commands: [["STATUS", 101], ["ANALOG", 110], ["ARMING CONFIG", 61], ["BOX NAMES", 116]] }
@@ -200,35 +218,64 @@ Rectangle {
 
         RowLayout {
             Layout.fillWidth: true
-            Text { text: "PID TUNING"; color: Colors.accent; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeMedium; font.bold: true; font.letterSpacing: 2 }
+            Text { text: "PID PROFILE"; color: Colors.accent; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeMedium; font.bold: true; font.letterSpacing: 2 }
             Item { Layout.fillWidth: true }
-            IGButton { text: "READ PID"; implicitWidth: 90; enabled: ConnectionManager.isConnected && !MSPManager.waiting; onClicked: MSPManager.request(112) }
-            IGButton { text: "SAVE TO FC"; implicitWidth: 100; enabled: ConnectionManager.isConnected && !MSPManager.waiting; active: true; onClicked: MSPManager.saveSettings() }
+            Text {
+                text: MSPManager.pidLoaded ? "FC PROFILE LOADED" : "READ FC PROFILE BEFORE EDITING"
+                color: MSPManager.pidLoaded ? Colors.ok : Colors.warning
+                font.family: Theme.fontFamily
+                font.pixelSize: Theme.fontSizeTiny
+                font.bold: true
+            }
+            IGButton { text: "READ FC"; implicitWidth: 90; enabled: ConnectionManager.isConnected && !MSPManager.waiting; onClicked: MSPManager.request(112) }
+            IGButton { text: "SAVE TO FC"; implicitWidth: 100; enabled: ConnectionManager.isConnected && !MSPManager.waiting && MSPManager.pidLoaded; active: true; onClicked: MSPManager.saveSettings() }
         }
-        Text { text: "Edit the active PID profile. Values are sent through MSP_SET_PID and saved with MSP_EEPROM_WRITE."; color: Colors.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeSmall }
-
-        Rectangle {
+        Text {
+            text: "Read the current INAV profile first. Roll, pitch, and yaw P/I/D values are editable below; writing preserves the other values returned in the FC profile. Write changes, then save to EEPROM and read back to verify."
+            color: Colors.textSecondary
+            font.family: Theme.fontFamily
+            font.pixelSize: Theme.fontSizeSmall
+            wrapMode: Text.WordWrap
             Layout.fillWidth: true
-            height: 170
-            color: Colors.bg1
-            border.color: Colors.border
-            ColumnLayout {
-                anchors.fill: parent
-                anchors.margins: Theme.spacingM
-                spacing: Theme.spacingS
-                RowLayout {
-                    Layout.fillWidth: true
-                    Text { text: "AXIS"; color: Colors.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeSmall; Layout.preferredWidth: 100 }
-                    Text { text: "P"; color: Colors.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeSmall; Layout.preferredWidth: 90 }
-                    Text { text: "I"; color: Colors.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeSmall; Layout.preferredWidth: 90 }
-                    Text { text: "D"; color: Colors.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeSmall; Layout.preferredWidth: 90 }
-                }
-                PidRow { label: "ROLL"; p: root.rollP; i: root.rollI; d: root.rollD; onChanged: { root.rollP = p; root.rollI = i; root.rollD = d } }
-                PidRow { label: "PITCH"; p: root.pitchP; i: root.pitchI; d: root.pitchD; onChanged: { root.pitchP = p; root.pitchI = i; root.pitchD = d } }
-                PidRow { label: "YAW"; p: root.yawP; i: root.yawI; d: root.yawD; onChanged: { root.yawP = p; root.yawI = i; root.yawD = d } }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            spacing: Theme.spacingM
+            PidAxisCard {
+                Layout.fillWidth: true; title: "ROLL"; p: root.rollP; i: root.rollI; d: root.rollD
+                enabled: MSPManager.pidLoaded && ConnectionManager.isConnected
+                onPEdited: function(value) { root.rollP = value }
+                onIEdited: function(value) { root.rollI = value }
+                onDEdited: function(value) { root.rollD = value }
+            }
+            PidAxisCard {
+                Layout.fillWidth: true; title: "PITCH"; p: root.pitchP; i: root.pitchI; d: root.pitchD
+                enabled: MSPManager.pidLoaded && ConnectionManager.isConnected
+                onPEdited: function(value) { root.pitchP = value }
+                onIEdited: function(value) { root.pitchI = value }
+                onDEdited: function(value) { root.pitchD = value }
+            }
+            PidAxisCard {
+                Layout.fillWidth: true; title: "YAW"; p: root.yawP; i: root.yawI; d: root.yawD
+                enabled: MSPManager.pidLoaded && ConnectionManager.isConnected
+                onPEdited: function(value) { root.yawP = value }
+                onIEdited: function(value) { root.yawI = value }
+                onDEdited: function(value) { root.yawD = value }
             }
         }
-        IGButton { text: "WRITE PID PROFILE"; implicitWidth: 170; enabled: ConnectionManager.isConnected && !MSPManager.waiting; onClicked: MSPManager.setPid(root.rollP, root.rollI, root.rollD, root.pitchP, root.pitchI, root.pitchD, root.yawP, root.yawI, root.yawD) }
+        RowLayout {
+            Layout.fillWidth: true
+            Item { Layout.fillWidth: true }
+            IGButton {
+                text: "WRITE PROFILE"
+                implicitWidth: 150
+                enabled: ConnectionManager.isConnected && MSPManager.pidLoaded && !MSPManager.waiting
+                onClicked: MSPManager.setPid(root.rollP, root.rollI, root.rollD,
+                                             root.pitchP, root.pitchI, root.pitchD,
+                                             root.yawP, root.yawI, root.yawD)
+            }
+        }
         Item { Layout.fillHeight: true }
     }
 
@@ -319,16 +366,46 @@ Rectangle {
         }
     }
 
-    component PidRow: RowLayout {
-        property string label
+    component PidAxisCard: Rectangle {
+        id: axisRoot
+        property string title
         property int p
         property int i
         property int d
-        signal changed()
-        Layout.fillWidth: true
-        Text { text: parent.label; color: Colors.textPrimary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeSmall; Layout.preferredWidth: 100 }
-        SpinBox { from: 0; to: 255; value: parent.p; editable: true; Layout.preferredWidth: 90; onValueModified: { parent.p = value; parent.changed() } }
-        SpinBox { from: 0; to: 255; value: parent.i; editable: true; Layout.preferredWidth: 90; onValueModified: { parent.i = value; parent.changed() } }
-        SpinBox { from: 0; to: 255; value: parent.d; editable: true; Layout.preferredWidth: 90; onValueModified: { parent.d = value; parent.changed() } }
+        signal pEdited(int value)
+        signal iEdited(int value)
+        signal dEdited(int value)
+        onPChanged: if (pSpin.value !== p) pSpin.value = p
+        onIChanged: if (iSpin.value !== i) iSpin.value = i
+        onDChanged: if (dSpin.value !== d) dSpin.value = d
+        implicitHeight: 190
+        color: Colors.bg1
+        border.color: Colors.border
+        radius: Theme.radiusSmall
+        ColumnLayout {
+            anchors { fill: parent; margins: Theme.spacingM }
+            spacing: Theme.spacingS
+            Text { text: axisRoot.title; color: Colors.accent; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeSmall; font.bold: true; font.letterSpacing: 1 }
+            RowLayout {
+                Layout.fillWidth: true
+                Text { text: "TERM"; color: Colors.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeTiny; Layout.fillWidth: true }
+                Text { text: "VALUE"; color: Colors.textSecondary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeTiny }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Text { text: "P"; color: Colors.textPrimary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeSmall; Layout.fillWidth: true }
+                SpinBox { id: pSpin; from: 0; to: 255; value: axisRoot.p; editable: true; enabled: axisRoot.enabled; onValueModified: axisRoot.pEdited(value) }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Text { text: "I"; color: Colors.textPrimary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeSmall; Layout.fillWidth: true }
+                SpinBox { id: iSpin; from: 0; to: 255; value: axisRoot.i; editable: true; enabled: axisRoot.enabled; onValueModified: axisRoot.iEdited(value) }
+            }
+            RowLayout {
+                Layout.fillWidth: true
+                Text { text: "D"; color: Colors.textPrimary; font.family: Theme.fontFamily; font.pixelSize: Theme.fontSizeSmall; Layout.fillWidth: true }
+                SpinBox { id: dSpin; from: 0; to: 255; value: axisRoot.d; editable: true; enabled: axisRoot.enabled; onValueModified: axisRoot.dEdited(value) }
+            }
+        }
     }
 }

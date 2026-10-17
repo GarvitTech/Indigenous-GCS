@@ -22,6 +22,9 @@
 #include "msp/MSPManager.h"
 #include "simulation/Simulator.h"
 
+// Map tile provider is the public OpenStreetMap server — keyless by design,
+// so there is no API key compiled into the binary.
+
 Q_LOGGING_CATEGORY(lcMain, "igcs.main")
 
 int main(int argc, char *argv[])
@@ -57,7 +60,13 @@ int main(int argc, char *argv[])
 
     // Simulator bytes feed into MAVLink pipeline
     QObject::connect(&simulator,  &Simulator::bytesGenerated,
-                     igcsApp.mavlinkManager(), &MAVLinkManager::processBytes);
+                     igcsApp.mavlinkManager(), &MAVLinkManager::processSimulationBytes);
+
+    // Development aid: IGCS_AUTOSTART_SIM=1 starts the built-in simulator at
+    // launch so the UI can be exercised without flight hardware. It is opt-in
+    // and off by default, so a normal launch never auto-connects to anything.
+    if (qEnvironmentVariableIsSet("IGCS_AUTOSTART_SIM"))
+        simulator.start();
 
     // Route MAVLink messages to mission and parameter managers
     QObject::connect(igcsApp.mavlinkManager(), &MAVLinkManager::messageReceived,
@@ -67,7 +76,7 @@ int main(int argc, char *argv[])
 
     // Wire vehicle status text to calibration manager when vehicle appears
     QObject::connect(igcsApp.mavlinkManager(), &MAVLinkManager::vehicleDetected,
-                     [&](uint8_t, uint8_t) {
+                     [&](uint8_t, uint8_t, bool) {
         VehicleManager *vm = igcsApp.vehicleManager();
         if (vm && vm->activeVehicle()) {
             QObject::connect(vm->activeVehicle(), &Vehicle::statusTextReceived,

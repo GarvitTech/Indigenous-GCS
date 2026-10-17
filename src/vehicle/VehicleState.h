@@ -1,10 +1,63 @@
 #pragma once
 #include <QString>
 #include <QDateTime>
+#include <QReadWriteLock>
 
 namespace IndigenousGCS {
 
 struct VehicleState {
+    mutable QReadWriteLock lock;
+
+    void copyFrom(const VehicleState &other) {
+        // Lock both to ensure a consistent snapshot
+        QWriteLocker writeLock(&this->lock);
+        QReadLocker readLock(&other.lock);
+
+        sysId       = other.sysId;
+        compId      = other.compId;
+        autopilot   = other.autopilot;
+        vehicleType = other.vehicleType;
+        firmwareVersion = other.firmwareVersion;
+        armed       = other.armed;
+        baseMode    = other.baseMode;
+        customMode  = other.customMode;
+        flightMode  = other.flightMode;
+        systemStatus = other.systemStatus;
+        roll  = other.roll;
+        pitch = other.pitch;
+        yaw   = other.yaw;
+        rollSpeed  = other.rollSpeed;
+        pitchSpeed = other.pitchSpeed;
+        yawSpeed   = other.yawSpeed;
+        gpsFixType  = other.gpsFixType;
+        gpsSatCount = other.gpsSatCount;
+        latitude    = other.latitude;
+        longitude   = other.longitude;
+        altitudeMSL = other.altitudeMSL;
+        altitudeRel = other.altitudeRel;
+        hdop        = other.hdop;
+        vdop        = other.vdop;
+        groundSpeed = other.groundSpeed;
+        airSpeed    = other.airSpeed;
+        climbRate   = other.climbRate;
+        heading     = other.heading;
+        batteryVoltage    = other.batteryVoltage;
+        batteryCurrent    = other.batteryCurrent;
+        batteryRemaining  = other.batteryRemaining;
+        sensorsPresentBitmask  = other.sensorsPresentBitmask;
+        sensorsEnabledBitmask  = other.sensorsEnabledBitmask;
+        sensorsHealthBitmask   = other.sensorsHealthBitmask;
+        cpuLoad                = other.cpuLoad;
+        rcAvailable = other.rcAvailable;
+        rcRssi      = other.rcRssi;
+        homeSet      = other.homeSet;
+        homeLat      = other.homeLat;
+        homeLon      = other.homeLon;
+        homeAlt      = other.homeAlt;
+        lastHeartbeat = other.lastHeartbeat;
+        lastUpdate    = other.lastUpdate;
+    }
+
     // Identity
     uint8_t  sysId       = 0;
     uint8_t  compId      = 0;

@@ -41,6 +41,9 @@ class Telemetry : public QObject
     Q_PROPERTY(QString flightMode  READ flightMode  NOTIFY stateChanged)
     Q_PROPERTY(int     cpuLoad     READ cpuLoad     NOTIFY stateChanged)
 
+    // RC
+    Q_PROPERTY(int     rcRSSI      READ rcRSSI      NOTIFY rcChanged)
+
 public:
     explicit Telemetry(QObject *parent = nullptr);
 
@@ -71,6 +74,7 @@ public:
     bool    armed()      const { return m_state.armed; }
     QString flightMode() const { return m_state.flightMode; }
     int     cpuLoad()    const { return m_state.cpuLoad; }
+    int     rcRSSI()     const { return static_cast<int>(m_state.rcRssi); }
 
     const VehicleState &state() const { return m_state; }
 
@@ -81,6 +85,7 @@ signals:
     void gpsChanged();
     void batteryChanged();
     void stateChanged();
+    void rcChanged();
 
 private:
     VehicleState m_state;

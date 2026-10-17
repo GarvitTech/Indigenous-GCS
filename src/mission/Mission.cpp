@@ -1,8 +1,27 @@
 #include "Mission.h"
+#include <QVariantMap>
+#include <cmath>
 
 namespace IndigenousGCS {
 
 Mission::Mission(QObject *parent) : QObject(parent) {}
+
+QVariantList Mission::waypointList() const
+{
+    QVariantList result;
+    result.reserve(m_waypoints.size());
+    for (const Waypoint &waypoint : m_waypoints) {
+        QVariantMap item;
+        item.insert("seq", waypoint.seq);
+        item.insert("command", waypoint.command);
+        item.insert("commandName", waypoint.commandName());
+        item.insert("latitude", waypoint.latitude);
+        item.insert("longitude", waypoint.longitude);
+        item.insert("altitude", waypoint.altitude);
+        result.append(item);
+    }
+    return result;
+}
 
 void Mission::addWaypoint(double lat, double lon, float alt, uint16_t command)
 {
@@ -80,11 +99,11 @@ QStringList Mission::validate() const
     }
     for (int i = 0; i < m_waypoints.size(); ++i) {
         const Waypoint &wp = m_waypoints[i];
-        if (wp.latitude  == 0.0 && wp.longitude == 0.0 &&
-            wp.command != MAV_CMD_NAV_TAKEOFF &&
-            wp.command != MAV_CMD_NAV_RETURN_TO_LAUNCH)
-            errors << QString("Waypoint %1 has zero coordinates").arg(i);
-        if (wp.altitude < -100.0f || wp.altitude > 10000.0f)
+        if (!std::isfinite(wp.latitude) || wp.latitude < -90.0 || wp.latitude > 90.0)
+            errors << QString("Waypoint %1 has invalid latitude").arg(i);
+        if (!std::isfinite(wp.longitude) || wp.longitude < -180.0 || wp.longitude > 180.0)
+            errors << QString("Waypoint %1 has invalid longitude").arg(i);
+        if (!std::isfinite(wp.altitude) || wp.altitude < -100.0f || wp.altitude > 10000.0f)
             errors << QString("Waypoint %1 has invalid altitude %2").arg(i).arg(wp.altitude);
     }
     return errors;

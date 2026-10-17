@@ -26,8 +26,9 @@ void Telemetry::update(const VehicleState &state)
     const bool stChg   = (state.armed      != m_state.armed      ||
                                state.flightMode != m_state.flightMode ||
                                state.cpuLoad    != m_state.cpuLoad);
+    const bool rcChg   = (state.rcRssi != m_state.rcRssi);
 
-    m_state = state;
+    m_state.copyFrom(state);
 
     if (attChg) emit attitudeChanged();
     if (posChg) emit positionChanged();
@@ -35,6 +36,7 @@ void Telemetry::update(const VehicleState &state)
     if (gpsChg) emit gpsChanged();
     if (batChg) emit batteryChanged();
     if (stChg)  emit stateChanged();
+    if (rcChg)  emit rcChanged();
 }
 
 } // namespace IndigenousGCS

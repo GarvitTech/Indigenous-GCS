@@ -2,6 +2,7 @@
 #include <QObject>
 #include <QList>
 #include <QString>
+#include <QVariantList>
 #include "Waypoint.h"
 
 namespace IndigenousGCS {
@@ -12,6 +13,7 @@ class Mission : public QObject
     Q_PROPERTY(int     count    READ count    NOTIFY waypointsChanged)
     Q_PROPERTY(bool    modified READ modified NOTIFY modifiedChanged)
     Q_PROPERTY(QString name     READ name     WRITE setName NOTIFY nameChanged)
+    Q_PROPERTY(QVariantList waypointList READ waypointList NOTIFY waypointsChanged)
 
 public:
     explicit Mission(QObject *parent = nullptr);
@@ -19,6 +21,7 @@ public:
     int     count()    const { return m_waypoints.size(); }
     bool    modified() const { return m_modified; }
     QString name()     const { return m_name; }
+    QVariantList waypointList() const;
 
     const QList<Waypoint> &waypoints() const { return m_waypoints; }
 

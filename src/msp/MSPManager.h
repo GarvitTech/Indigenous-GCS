@@ -34,6 +34,8 @@ class MSPManager : public QObject
     Q_PROPERTY(QVariantList servoOutputs READ servoOutputs NOTIFY outputsChanged)
     Q_PROPERTY(QVariantList modeNames READ modeNames NOTIFY modesChanged)
     Q_PROPERTY(QVariantList modeIds READ modeIds NOTIFY modesChanged)
+    Q_PROPERTY(QVariantList pidValues READ pidValues NOTIFY pidChanged)
+    Q_PROPERTY(bool pidLoaded READ pidLoaded NOTIFY pidChanged)
 
 public:
     explicit MSPManager(ConnectionManager *connection, QObject *parent = nullptr);
@@ -58,6 +60,8 @@ public:
     QVariantList servoOutputs() const { return m_servoOutputs; }
     QVariantList modeNames() const { return m_modeNames; }
     QVariantList modeIds() const { return m_modeIds; }
+    QVariantList pidValues() const { return m_pidValues; }
+    bool pidLoaded() const { return m_pidPayload.size() >= 9; }
 
     Q_INVOKABLE void request(int command);
     Q_INVOKABLE void requestWithPayload(int command, const QByteArray &payload);
@@ -74,6 +78,7 @@ signals:
     void receiverChanged();
     void outputsChanged();
     void modesChanged();
+    void pidChanged();
     void responseReceived(int command, const QByteArray &payload);
     void requestTimedOut(int command);
     void protocolError(const QString &message);
@@ -109,6 +114,8 @@ private:
     QVariantList m_servoOutputs;
     QVariantList m_modeNames;
     QVariantList m_modeIds;
+    QByteArray m_pidPayload;
+    QVariantList m_pidValues;
 };
 
 } // namespace IndigenousGCS

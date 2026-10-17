@@ -10,6 +10,26 @@ Rectangle {
 
     property var vehicle: VehicleManager ? VehicleManager.activeVehicle : null
 
+    // Board-selection helpers live at root scope so every part of the page can
+    // call them. Previously they were nested inside the editor's control block,
+    // which left the board picker label (a different subtree) unable to resolve
+    // selectedBoardName() — it silently rendered as undefined.
+    function syncBoardSelection() {
+        if (FirmwareManager.selectedBoard.length === 0 && FirmwareManager.boardPickerItems.length > 0)
+            FirmwareManager.selectedBoard = FirmwareManager.boardPickerItems[0].fqbn
+    }
+
+    function selectedBoardName() {
+        const boards = FirmwareManager.boardPickerItems
+        for (let i = 0; i < boards.length; ++i) {
+            if (boards[i].fqbn === FirmwareManager.selectedBoard)
+                return boards[i].name
+        }
+        return boards.length > 0 ? "Select a board" : "No platform boards installed"
+    }
+
+    Component.onCompleted: syncBoardSelection()
+
     // ── Connections ──────────────────────────────────────────────────────────
     Connections {
         target: FirmwareManager
@@ -70,81 +90,241 @@ Rectangle {
 
                 // Config bar
                 Rectangle {
-                    Layout.fillWidth: true; height: 40
+                    Layout.fillWidth: true; height: 76
                     color: Colors.bg2
                     Rectangle { anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-                height: 1; color: Colors.border }
+                        height: 1; color: Colors.border }
 
-                    RowLayout {
+                    ColumnLayout {
                         anchors { fill: parent; leftMargin: Theme.spacingM; rightMargin: Theme.spacingM }
-                        spacing: Theme.spacingS
+                        spacing: 2
 
-                        Text { text: "BOARD:"; color: Colors.textSecondary; font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Theme.spacingS
+                            Text { text: "BOARD:"; color: Colors.textSecondary; font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily }
 
-                        ComboBox {
-                            id: boardCombo
-                            model: FirmwareManager.supportedBoards()
-                            implicitWidth: 220; implicitHeight: 26
-                            currentIndex: 0
-                            onCurrentTextChanged: FirmwareManager.selectedBoard = FirmwareManager.boardFqbn(currentText)
-                            background: Rectangle { color: Colors.bg3; radius: Theme.radiusSmall; border.color: Colors.border; border.width: 1 }
-                            contentItem: Text { text: boardCombo.displayText; color: Colors.accent; font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily; leftPadding: 6; verticalAlignment: Text.AlignVCenter }
-                            delegate: ItemDelegate {
-                                width: boardCombo.width
-                                contentItem: Text { text: modelData; color: Colors.textPrimary; font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily }
-                                background: Rectangle { color: hovered ? Colors.bg4 : Colors.bg3 }
+                            Rectangle {
+                                id: boardPicker
+                                property bool popupOpen: false
+                                property string searchText: ""
+                                property var filteredItems: {
+                                    const query = searchText.trim().toLowerCase()
+                                    const boards = FirmwareManager.boardPickerItems
+                                    if (!query)
+                                        return boards
+                                    return boards.filter(function(board) {
+                                        return board.name.toLowerCase().indexOf(query) >= 0
+                                            || board.category.toLowerCase().indexOf(query) >= 0
+                                            || board.fqbn.toLowerCase().indexOf(query) >= 0
+                                    })
+                                }
+                                implicitWidth: 220
+                                implicitHeight: 26
+                                color: Colors.bg3
+                                radius: Theme.radiusSmall
+                                border.color: boardPicker.popupOpen ? Colors.accent : Colors.border
+                                border.width: 1
+                                enabled: FirmwareManager.availableBoards.length > 0
+
+                                RowLayout {
+                                    anchors { fill: parent; leftMargin: 7; rightMargin: 7 }
+                                    Text {
+                                        Layout.fillWidth: true
+                                        text: selectedBoardName()
+                                        color: boardPicker.enabled ? Colors.accent : Colors.textDisabled
+                                        font.pixelSize: Theme.fontSizeSmall
+                                        font.family: Theme.fontFamily
+                                        elide: Text.ElideRight
+                                        verticalAlignment: Text.AlignVCenter
+                                    }
+                                    Text { text: boardPicker.popupOpen ? "▲" : "▼"; color: Colors.textSecondary; font.pixelSize: 9 }
+                                }
+                                TapHandler { onTapped: boardPicker.popupOpen = !boardPicker.popupOpen }
+
+                                Popup {
+                                    id: boardPopup
+                                    // The picker opens by toggling its own flag, so
+                                    // the Popup must follow it explicitly.
+                                    visible: boardPicker.popupOpen
+                                    x: 0
+                                    y: boardPicker.height + 3
+                                    width: 340
+                                    // Fixed height: binding to the column's implicit
+                                    // height created a cycle through the filling
+                                    // ListView, collapsing the popup to zero and
+                                    // hiding every board.
+                                    height: 460
+                                    padding: 8
+                                    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+                                    onOpened: { boardPicker.popupOpen = true; boardSearch.forceActiveFocus() }
+                                    onClosed: { boardPicker.popupOpen = false; boardPicker.searchText = "" }
+                                    background: Rectangle { color: Colors.bg1; border.color: Colors.border; radius: Theme.radiusSmall }
+                                    contentItem: ColumnLayout {
+                                        id: boardPopupColumn
+                                        spacing: 6
+                                        TextField {
+                                            id: boardSearch
+                                            Layout.fillWidth: true
+                                            placeholderText: "Search boards and platforms"
+                                            text: boardPicker.searchText
+                                            onTextChanged: boardPicker.searchText = text
+                                            color: Colors.textPrimary
+                                            selectByMouse: true
+                                            background: Rectangle { color: Colors.bg3; radius: Theme.radiusSmall; border.color: Colors.border }
+                                        }
+                                        ListView {
+                                            id: boardList
+                                            Layout.fillWidth: true
+                                            Layout.fillHeight: true
+                                            clip: true
+                                            model: boardPicker.filteredItems
+                                            boundsBehavior: Flickable.StopAtBounds
+                                            delegate: Item {
+                                                required property var modelData
+                                                required property int index
+                                                readonly property bool newCategory: index === 0
+                                                    || modelData.category !== boardPicker.filteredItems[index - 1].category
+                                                width: boardList.width
+                                                height: newCategory ? 58 : 38
+
+                                                Text {
+                                                    anchors { left: parent.left; top: parent.top; leftMargin: 8; topMargin: 4 }
+                                                    visible: parent.newCategory
+                                                    text: modelData.category
+                                                    color: Colors.accentBlue
+                                                    font.pixelSize: Theme.fontSizeTiny
+                                                    font.family: Theme.fontFamily
+                                                    font.bold: true
+                                                    elide: Text.ElideRight
+                                                    width: parent.width - 16
+                                                }
+                                                Rectangle {
+                                                    anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                                                    height: 34
+                                                    radius: 3
+                                                    color: boardHover.containsMouse ? Colors.bg3
+                                                         : modelData.fqbn === FirmwareManager.selectedBoard ? Colors.accentGlow : "transparent"
+                                                    Text {
+                                                        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; leftMargin: 10; rightMargin: 8 }
+                                                        text: modelData.name
+                                                        color: Colors.textPrimary
+                                                        font.pixelSize: Theme.fontSizeSmall
+                                                        font.family: Theme.fontFamily
+                                                        elide: Text.ElideRight
+                                                    }
+                                                    HoverHandler { id: boardHover }
+                                                    TapHandler {
+                                                        onTapped: {
+                                                            FirmwareManager.selectedBoard = modelData.fqbn
+                                                            boardPopup.close()
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            Text {
+                                                anchors.centerIn: parent
+                                                visible: boardList.count === 0
+                                                text: "No installed boards match."
+                                                color: Colors.textSecondary
+                                                font.pixelSize: Theme.fontSizeSmall
+                                            }
+                                        }
+                                    }
+                                }
                             }
-                            popup: Popup {
-                                y: boardCombo.height; width: boardCombo.width
-                                background: Rectangle { color: Colors.bg3; border.color: Colors.border; border.width: 1; radius: Theme.radiusSmall }
-                                contentItem: ListView { model: boardCombo.delegateModel; clip: true; implicitHeight: contentHeight }
+
+                            Text { text: "PORT:"; color: Colors.textSecondary; font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily }
+
+                            ComboBox {
+                                id: portCombo
+                                model: FirmwareManager.serialPorts
+                                currentIndex: count > 0 ? 0 : -1
+                                implicitWidth: 110; implicitHeight: 26
+                                onCurrentTextChanged: FirmwareManager.selectedPort = currentText
+                                background: Rectangle { color: Colors.bg3; radius: Theme.radiusSmall; border.color: Colors.border; border.width: 1 }
+                                contentItem: Text { text: portCombo.displayText; color: Colors.accent; font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily; leftPadding: 6; verticalAlignment: Text.AlignVCenter }
+                                delegate: ItemDelegate {
+                                    width: portCombo.width
+                                    contentItem: Text { text: modelData; color: Colors.textPrimary; font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily }
+                                    background: Rectangle { color: hovered ? Colors.bg4 : Colors.bg3 }
+                                }
+                                popup: Popup {
+                                    y: portCombo.height; width: portCombo.width
+                                    background: Rectangle { color: Colors.bg3; border.color: Colors.border; border.width: 1; radius: Theme.radiusSmall }
+                                    contentItem: ListView { model: portCombo.delegateModel; clip: true; implicitHeight: contentHeight }
+                                }
                             }
+
+                            IGButton { text: "⟳"; implicitWidth: 28; implicitHeight: 26; secondary: true; onClicked: FirmwareManager.refreshSerialPorts() }
+
+                            Text { text: "BAUD:"; color: Colors.textSecondary; font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily }
+                            ComboBox {
+                                id: baudCombo
+                                model: ["921600","460800","230400","115200"]
+                                implicitWidth: 80; implicitHeight: 26
+                                onCurrentTextChanged: FirmwareManager.flashBaud = parseInt(currentText)
+                                background: Rectangle { color: Colors.bg3; radius: Theme.radiusSmall; border.color: Colors.border; border.width: 1 }
+                                contentItem: Text { text: baudCombo.displayText; color: Colors.accent; font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily; leftPadding: 6; verticalAlignment: Text.AlignVCenter }
+                                delegate: ItemDelegate {
+                                    width: baudCombo.width
+                                    contentItem: Text { text: modelData; color: Colors.textPrimary; font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily }
+                                    background: Rectangle { color: hovered ? Colors.bg4 : Colors.bg3 }
+                                }
+                                popup: Popup {
+                                    y: baudCombo.height; width: baudCombo.width
+                                    background: Rectangle { color: Colors.bg3; border.color: Colors.border; border.width: 1; radius: Theme.radiusSmall }
+                                    contentItem: ListView { model: baudCombo.delegateModel; clip: true; implicitHeight: contentHeight }
+                                }
+                            }
+
+                            Item { Layout.fillWidth: true }
                         }
 
-                        Text { text: "PORT:"; color: Colors.textSecondary; font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily }
-
-                        ComboBox {
-                            id: portCombo
-                            model: FirmwareManager.serialPorts
-                            currentIndex: count > 0 ? 0 : -1
-                            implicitWidth: 130; implicitHeight: 26
-                            onCurrentTextChanged: FirmwareManager.selectedPort = currentText
-                            background: Rectangle { color: Colors.bg3; radius: Theme.radiusSmall; border.color: Colors.border; border.width: 1 }
-                            contentItem: Text { text: portCombo.displayText; color: Colors.accent; font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily; leftPadding: 6; verticalAlignment: Text.AlignVCenter }
-                            delegate: ItemDelegate {
-                                width: portCombo.width
-                                contentItem: Text { text: modelData; color: Colors.textPrimary; font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily }
-                                background: Rectangle { color: hovered ? Colors.bg4 : Colors.bg3 }
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: Theme.spacingS
+                            Text { text: "ARDUINO CLI:"; color: Colors.textSecondary; font.pixelSize: Theme.fontSizeTiny; font.family: Theme.fontFamily }
+                            TextField {
+                                id: arduinoCliPathField
+                                Layout.fillWidth: true
+                                implicitHeight: 24
+                                text: FirmwareManager.arduinoCliPath
+                                placeholderText: "Auto-detected, or enter path to arduino-cli"
+                                color: Colors.textPrimary
+                                font.pixelSize: Theme.fontSizeTiny
+                                selectByMouse: true
+                                onEditingFinished: FirmwareManager.arduinoCliPath = text
+                                background: Rectangle { color: Colors.bg3; radius: Theme.radiusSmall; border.color: Colors.border; border.width: 1 }
                             }
-                            popup: Popup {
-                                y: portCombo.height; width: portCombo.width
-                                background: Rectangle { color: Colors.bg3; border.color: Colors.border; border.width: 1; radius: Theme.radiusSmall }
-                                contentItem: ListView { model: portCombo.delegateModel; clip: true; implicitHeight: contentHeight }
+                            Text {
+                                text: FirmwareManager.boardListStatus
+                                color: FirmwareManager.arduinoCliAvailable ? Colors.textSecondary : Colors.warning
+                                font.pixelSize: Theme.fontSizeTiny
+                                font.family: Theme.fontFamily
+                                elide: Text.ElideRight
+                                Layout.maximumWidth: 210
                             }
-                        }
-
-                        IGButton { text: "⟳"; implicitWidth: 28; implicitHeight: 26; secondary: true; onClicked: FirmwareManager.refreshSerialPorts() }
-
-                        Text { text: "BAUD:"; color: Colors.textSecondary; font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily }
-                        ComboBox {
-                            id: baudCombo
-                            model: ["921600","460800","230400","115200"]
-                            implicitWidth: 90; implicitHeight: 26
-                            onCurrentTextChanged: FirmwareManager.flashBaud = parseInt(currentText)
-                            background: Rectangle { color: Colors.bg3; radius: Theme.radiusSmall; border.color: Colors.border; border.width: 1 }
-                            contentItem: Text { text: baudCombo.displayText; color: Colors.accent; font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily; leftPadding: 6; verticalAlignment: Text.AlignVCenter }
-                            delegate: ItemDelegate {
-                                width: baudCombo.width
-                                contentItem: Text { text: modelData; color: Colors.textPrimary; font.pixelSize: Theme.fontSizeSmall; font.family: Theme.fontFamily }
-                                background: Rectangle { color: hovered ? Colors.bg4 : Colors.bg3 }
-                            }
-                            popup: Popup {
-                                y: baudCombo.height; width: baudCombo.width
-                                background: Rectangle { color: Colors.bg3; border.color: Colors.border; border.width: 1; radius: Theme.radiusSmall }
-                                contentItem: ListView { model: baudCombo.delegateModel; clip: true; implicitHeight: contentHeight }
+                            IGButton {
+                                text: "LOAD BOARDS"
+                                implicitWidth: 92
+                                implicitHeight: 24
+                                secondary: true
+                                onClicked: {
+                                    if (arduinoCliPathField.text !== FirmwareManager.arduinoCliPath)
+                                        FirmwareManager.arduinoCliPath = arduinoCliPathField.text
+                                    else
+                                        FirmwareManager.refreshBoards()
+                                }
                             }
                         }
                     }
+                }
+
+                Connections {
+                    target: FirmwareManager
+                    function onAvailableBoardsChanged() { syncBoardSelection() }
+                    function onSelectedBoardChanged() { syncBoardSelection() }
                 }
 
                 // Editor header
@@ -173,15 +353,23 @@ Rectangle {
                         id: lineNumPanel
                         anchors { left: parent.left; top: parent.top; bottom: parent.bottom }
                         width: 44; color: "#0a0e14"
-                        Rectangle { anchors { top: parent.top; bottom: parent.bottom; right: parent.right }
-                width: 1; color: Colors.border }
+                        Rectangle {
+                            anchors { top: parent.top; bottom: parent.bottom; right: parent.right }
+                            width: 1; color: Colors.border
+                        }
 
                         ListView {
                             anchors { fill: parent; topMargin: 8 }
                             model: codeEditor.lineCount
                             clip: true
                             interactive: false
-                            contentY: codeEditor.contentY
+                            // Track the editor's scroll position so line numbers stay
+                            // aligned. contentY is a real property write, not a binding,
+                            // so it must be driven from the editor's signal.
+                            Connections {
+                                target: codeEditor
+                                function onContentYChanged() { parent.contentY = codeEditor.contentY }
+                            }
                             delegate: Text {
                                 width: lineNumPanel.width - 8
                                 height: 18
@@ -234,7 +422,7 @@ Rectangle {
                         IGButton {
                             text: FirmwareManager.compiling ? "COMPILING..." : "▶  COMPILE"
                             implicitWidth: 130; implicitHeight: 32
-                            enabled: !FirmwareManager.compiling && !FirmwareManager.flashing
+                            enabled: FirmwareManager.arduinoCliAvailable && FirmwareManager.availableBoards.length > 0 && !FirmwareManager.compiling && !FirmwareManager.flashing
                             active: !FirmwareManager.compiling
                             onClicked: FirmwareManager.compileSketch(codeEditor.text)
                         }
@@ -242,14 +430,14 @@ Rectangle {
                         IGButton {
                             text: FirmwareManager.flashing ? "FLASHING..." : "⚡  FLASH BINARY"
                             implicitWidth: 140; implicitHeight: 32
-                            enabled: !FirmwareManager.flashing && !FirmwareManager.compiling && FirmwareManager.binaryPath !== ""
+                            enabled: FirmwareManager.arduinoCliAvailable && !FirmwareManager.flashing && !FirmwareManager.compiling && FirmwareManager.binaryPath !== ""
                             onClicked: FirmwareManager.flashBinary(FirmwareManager.binaryPath, portCombo.currentText)
                         }
 
                         IGButton {
                             text: "⚡  COMPILE & FLASH"
                             implicitWidth: 160; implicitHeight: 32
-                            enabled: !FirmwareManager.compiling && !FirmwareManager.flashing && portCombo.currentText !== ""
+                            enabled: FirmwareManager.arduinoCliAvailable && FirmwareManager.availableBoards.length > 0 && !FirmwareManager.compiling && !FirmwareManager.flashing && portCombo.currentText !== ""
                             onClicked: FirmwareManager.compileAndFlash(codeEditor.text, portCombo.currentText)
                         }
 
@@ -484,8 +672,8 @@ Rectangle {
                         anchors { fill: parent; margins: Theme.spacingS }
                         spacing: 2
                         Text { text: "ESP32 BOOT MODE"; color: Colors.textDisabled; font.pixelSize: Theme.fontSizeTiny; font.family: Theme.fontFamily; font.letterSpacing: 1 }
-                        Text { text: "Hold BOOT button → Press RESET → Release BOOT → Click Flash"; color: Colors.textSecondary; font.pixelSize: Theme.fontSizeTiny; font.family: Theme.fontFamily }
-                        Text { text: "After flash: Press RESET to run firmware. Baud 921600 recommended."; color: Colors.textDisabled; font.pixelSize: Theme.fontSizeTiny; font.family: Theme.fontFamily }
+                        Text { text: "If auto-reset fails: hold BOOT → press RESET → release BOOT while upload starts."; color: Colors.textSecondary; font.pixelSize: Theme.fontSizeTiny; font.family: Theme.fontFamily }
+                        Text { text: "COMPILE & FLASH uses Arduino CLI and the selected board's full image layout. Press RESET after upload if needed."; color: Colors.textDisabled; font.pixelSize: Theme.fontSizeTiny; font.family: Theme.fontFamily }
                     }
                 }
             }

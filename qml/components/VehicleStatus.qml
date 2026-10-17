@@ -9,7 +9,7 @@ RowLayout {
 
     IGButton {
         text: "ARM"
-        enabled: vehicle !== null && !vehicle.armed
+        enabled: vehicle !== null && !vehicle.simulated && !vehicle.armed
         baseColor: Colors.warning
         textColor: Colors.bg0
         implicitWidth: 80
@@ -18,7 +18,7 @@ RowLayout {
 
     IGButton {
         text: "DISARM"
-        enabled: vehicle !== null && vehicle.armed
+        enabled: vehicle !== null && !vehicle.simulated && vehicle.armed
         danger: true
         implicitWidth: 80
         onClicked: confirmDialog.armMode = false, confirmDialog.open()
@@ -56,7 +56,7 @@ RowLayout {
                 danger: !confirmDialog.armMode
                 baseColor: confirmDialog.armMode ? Colors.warning : Colors.critical
                 onClicked: {
-                    if (vehicle) {
+                    if (vehicle && !vehicle.simulated) {
                         if (confirmDialog.armMode) vehicle.arm()
                         else vehicle.disarm()
                     }

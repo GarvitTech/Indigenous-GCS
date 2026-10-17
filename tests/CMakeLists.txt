@@ -60,3 +60,20 @@ qt_add_executable(test_vehicle
 target_include_directories(test_vehicle PRIVATE ${SRC} ${MAVLINK_INCLUDE_DIR})
 target_link_libraries(test_vehicle PRIVATE Qt6::Test Qt6::Core)
 add_test(NAME test_vehicle COMMAND test_vehicle)
+
+# ── test_guide ────────────────────────────────────────────────────────────────
+# The guide is a Qt resource owned by the main target, so this test links the
+# resource in directly rather than depending on the application binary.
+qt_add_executable(test_guide
+    test_guide/test_guide.cpp
+)
+target_include_directories(test_guide PRIVATE ${SRC} ${MAVLINK_INCLUDE_DIR})
+target_link_libraries(test_guide PRIVATE Qt6::Test Qt6::Core)
+
+qt_add_resources(test_guide guide_resources
+    PREFIX "/docs"
+    BASE "${CMAKE_SOURCE_DIR}/resources/docs"
+    FILES ${CMAKE_SOURCE_DIR}/resources/docs/guide.html
+)
+
+add_test(NAME test_guide COMMAND test_guide)

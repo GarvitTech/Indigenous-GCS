@@ -19,6 +19,7 @@ constexpr quint8 kMspServo = 103;
 constexpr quint8 kMspMotor = 104;
 constexpr quint8 kMspBoxNames = 116;
 constexpr quint8 kMspBoxIds = 119;
+constexpr quint8 kMspPid = 112;
 constexpr quint8 kMspSetPid = 202;
 constexpr quint8 kMspEepromWrite = 250;
 
@@ -98,10 +99,14 @@ void MSPManager::setPid(int rollP, int rollI, int rollD,
             return;
         }
     }
+    if (!pidLoaded()) {
+        emit protocolError(QStringLiteral("Read the flight-controller PID profile before writing it."));
+        return;
+    }
 
-    QByteArray payload;
-    for (const auto value : values)
-        payload.append(static_cast<char>(value));
+    QByteArray payload = m_pidPayload;
+    for (qsizetype index = 0; index < values.size(); ++index)
+        payload[index] = static_cast<char>(values.at(index));
     sendRequest(kMspSetPid, payload);
 }
 
@@ -222,6 +227,18 @@ void MSPManager::updateState(const MSPMessage &message)
         for (const auto byte : message.payload)
             m_modeIds.append(static_cast<quint8>(byte));
         emit modesChanged();
+        break;
+    case kMspPid:
+        if (message.payload.size() >= 9) {
+            m_pidPayload = message.payload;
+            m_pidValues.clear();
+            m_pidValues.reserve(m_pidPayload.size());
+            for (const auto byte : m_pidPayload)
+                m_pidValues.append(static_cast<quint8>(byte));
+            emit pidChanged();
+        } else {
+            emit protocolError(QStringLiteral("The flight controller returned an incomplete PID profile."));
+        }
         break;
     default:
         break;

@@ -15,6 +15,7 @@ Rectangle {
 
     readonly property var pages: [
         { icon: "⊞", label: "DASHBOARD",   sub: "Overview" },
+        { icon: "✈", label: "FLIGHT DATA", sub: "HUD · Map" },
         { icon: "◎", label: "MISSION",     sub: "Waypoints" },
         { icon: "⚙", label: "PARAMETERS",  sub: "FC Config" },
         { icon: "≋", label: "INAV CONFIG", sub: "MSP Setup" },

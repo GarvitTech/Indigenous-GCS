@@ -15,7 +15,8 @@ enum class MissionTransferState {
     Uploading,
     Downloading,
     Complete,
-    Failed
+    Failed,
+    Clearing
 };
 
 class MissionManager : public QObject
@@ -45,6 +46,7 @@ signals:
     void transferProgressChanged();
     void uploadComplete();
     void downloadComplete();
+    void clearComplete();
     void transferFailed(const QString &reason);
 
 private:
@@ -53,8 +55,12 @@ private:
     void handleMissionAck(const mavlink_message_t &msg);
     void handleMissionCount(const mavlink_message_t &msg);
     void handleMissionItemInt(const mavlink_message_t &msg);
-    void sendNextItem();
+    void handleMissionItem(const mavlink_message_t &msg);
+    void appendDownloadedWaypoint(const Waypoint &waypoint);
+    void sendNextItem(bool useIntProtocol);
     void setState(MissionTransferState s);
+    bool transferInProgress() const;
+    bool isTargetMessage(const mavlink_message_t &msg) const;
     void onTimeout();
 
     MAVLinkManager              *m_mavlink;
@@ -66,6 +72,7 @@ private:
     uint8_t  m_targetComp = 0;
     uint16_t m_expectedCount = 0;
     uint16_t m_nextSeq       = 0;
+    bool m_downloadUsesInt = false;
     QList<Waypoint> m_downloadBuffer;
 
     QTimer m_timeoutTimer;

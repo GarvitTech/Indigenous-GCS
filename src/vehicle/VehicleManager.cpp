@@ -2,6 +2,7 @@
 #include "Vehicle.h"
 #include "mavlink/MAVLinkManager.h"
 #include <QLoggingCategory>
+#include <algorithm>
 
 Q_LOGGING_CATEGORY(lcVehicleMgr, "igcs.vehiclemgr")
 
@@ -14,15 +15,17 @@ VehicleManager::VehicleManager(MAVLinkManager *mavlink, QObject *parent)
             this, &VehicleManager::onVehicleDetected);
     connect(mavlink, &MAVLinkManager::vehicleLost,
             this, &VehicleManager::onVehicleLost);
+    connect(mavlink, &MAVLinkManager::vehicleSourceChanged,
+            this, &VehicleManager::onVehicleSourceChanged);
     connect(mavlink, &MAVLinkManager::messageReceived,
             this, &VehicleManager::onMessageReceived);
 }
 
-void VehicleManager::onVehicleDetected(uint8_t sysId, uint8_t compId)
+void VehicleManager::onVehicleDetected(uint8_t sysId, uint8_t compId, bool simulated)
 {
     if (m_vehicles.count(sysId)) return;
 
-    auto vehicle = std::make_unique<Vehicle>(sysId, compId, m_mavlink, this);
+    auto vehicle = std::make_unique<Vehicle>(sysId, compId, m_mavlink, simulated, this);
     vehicle->setConnected(true);
 
     connect(vehicle.get(), &Vehicle::telemetryUpdated,
@@ -31,7 +34,7 @@ void VehicleManager::onVehicleDetected(uint8_t sysId, uint8_t compId)
     Vehicle *raw = vehicle.get();
     m_vehicles.emplace(sysId, std::move(vehicle));
 
-    if (!m_activeVehicle) {
+    if (!m_activeVehicle || (m_activeVehicle->simulated() && !simulated)) {
         m_activeVehicle = raw;
         emit activeVehicleChanged(m_activeVehicle);
     }
@@ -54,7 +57,29 @@ void VehicleManager::onVehicleLost(uint8_t sysId)
     qCWarning(lcVehicleMgr) << "Vehicle removed sysId=" << sysId;
 
     if (!m_activeVehicle && !m_vehicles.empty()) {
-        m_activeVehicle = m_vehicles.begin()->second.get();
+        auto real = std::find_if(m_vehicles.begin(), m_vehicles.end(),
+                                 [](const auto &entry) { return !entry.second->simulated(); });
+        m_activeVehicle = real != m_vehicles.end()
+                ? real->second.get() : m_vehicles.begin()->second.get();
+        emit activeVehicleChanged(m_activeVehicle);
+    }
+}
+
+void VehicleManager::onVehicleSourceChanged(uint8_t sysId, bool simulated)
+{
+    auto it = m_vehicles.find(sysId);
+    if (it == m_vehicles.end()) return;
+
+    it->second->setSimulated(simulated);
+    if (m_activeVehicle == it->second.get() && simulated) {
+        auto real = std::find_if(m_vehicles.begin(), m_vehicles.end(),
+                                 [](const auto &entry) { return !entry.second->simulated(); });
+        if (real != m_vehicles.end()) {
+            m_activeVehicle = real->second.get();
+            emit activeVehicleChanged(m_activeVehicle);
+        }
+    } else if ((!m_activeVehicle || m_activeVehicle->simulated()) && !simulated) {
+        m_activeVehicle = it->second.get();
         emit activeVehicleChanged(m_activeVehicle);
     }
 }

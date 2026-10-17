@@ -28,9 +28,10 @@ signals:
     void telemetryUpdated();
 
 public slots:
-    void onVehicleDetected(uint8_t sysId, uint8_t compId);
+    void onVehicleDetected(uint8_t sysId, uint8_t compId, bool simulated);
     void onVehicleLost(uint8_t sysId);
     void onMessageReceived(const mavlink_message_t &msg);
+    void onVehicleSourceChanged(uint8_t sysId, bool simulated);
 
 private:
     MAVLinkManager                           *m_mavlink;
