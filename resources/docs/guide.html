@@ -339,6 +339,7 @@
  <a href="#intro">Introduction</a>
  <a href="#install-mac">Install — macOS</a>
  <a href="#install-win">Install — Windows</a>
+ <a href="#push">Pushing to GitHub</a>
  <a href="#first-run">First Run</a>
  <a href="#connecting">Connecting to the FC</a>
  <a href="#dashboard">Dashboard</a>
@@ -595,11 +596,78 @@ cd $HOME\Desktop\IndigenousGCS
  <li>Install <strong>Visual Studio 2022</strong> with the <em>Desktop development with C++</em> workload.</li>
  <li>Install <strong>CMake</strong> from <a href="https://cmake.org/download/">cmake.org</a> and tick "Add to PATH".</li>
  <li>Install <strong>Qt 6.5+</strong> from <a href="https://www.qt.io/download">qt.io</a>, selecting the <em>MSVC 2022 64-bit</em> kit plus <em>Qt Quick</em>, <em>Qt Quick Controls</em>, <em>Qt Location</em>, <em>Qt Positioning</em>, <em>Qt SerialPort</em> and <em>Qt SQL</em>.</li>
- <li>Re-run the build block from step 3 above, adjusting <code>$QtDir</code>.</li>
-</ol>
-
-<!-- ═══════ -->
-<h2 id="first-run">4 · First Run</h2>
+  <li>Re-run the build block from step 3 above, adjusting <code>$QtDir</code>.</li>
+ </ol>
+ <!-- ═══════ -->
+ <h2 id="push">3b · Pushing your changes to GitHub</h2>
+ <p>
+   If <code>git push</code> fails with <em>“Authentication failed”</em>,
+   <em>“could not read Username”</em> or <em>“Permission denied (publickey)”</em>,
+   the code is fine — Git just cannot prove who you are. Pick one fix below.
+ </p>
+ <div class="warn">
+   <strong>NEVER commit a password or token into the repository.</strong> Store it
+   in the Git credential helper, or use a token only when Git prompts for the
+   password field. A leaked token gives full access to your account.
+ </div>
+ <h3>Fix A · Personal Access Token (works everywhere)</h3>
+ <ol>
+   <li>Go to <a href="https://github.com/settings/tokens">github.com/settings/tokens</a> and create a token with the <code>repo</code> scope.</li>
+   <li>When Git asks for your password, paste the <em>token</em> (not your GitHub password).</li>
+   <li>Cache it so you only do this once:</li>
+ </ol>
+ <div class="codeblock">
+  <div class="cb-head">
+     <span class="cb-title">macOS · cache GitHub credentials</span>
+     <button class="copy" data-copy="push-mac">COPY</button>
+  </div>
+ <pre id="push-mac">git config --global credential.helper osxkeychain
+ cd "$HOME/Desktop/IndigenousGCS"
+ git pull --rebase origin main
+ git push origin main</pre>
+ </div>
+ <div class="codeblock">
+  <div class="cb-head">
+     <span class="cb-title">Windows · cache GitHub credentials</span>
+     <button class="copy" data-copy="push-win">COPY</button>
+  </div>
+ <pre id="push-win">git config --global credential.helper manager
+ cd "$HOME\Desktop\IndigenousGCS"
+ git pull --rebase origin main
+ git push origin main</pre>
+ </div>
+ <h3>Fix B · SSH key (no password prompts)</h3>
+ <div class="codeblock">
+  <div class="cb-head">
+     <span class="cb-title">Generate and register an SSH key</span>
+     <button class="copy" data-copy="push-ssh">COPY</button>
+  </div>
+ <pre id="push-ssh"><span class="c"># 1. Create a key (press Enter for every prompt)</span>
+ ssh-keygen -t ed25519 -C "your@email.com"
+ <span class="c"># 2. Print the public key — copy the whole line</span>
+ cat ~/.ssh/id_ed25519.pub
+ <span class="c"># 3. Paste it at github.com/settings/keys → New SSH key</span>
+ <span class="c"># 4. Point this repo at SSH and push</span>
+ git remote set-url origin git@github.com:GarvitTech/Indigenous-GCS.git
+ git push origin main</pre>
+ </div>
+ <h3>Check whether you actually have anything to push</h3>
+ <p>
+   If the line below prints <code>0&nbsp;&nbsp;0</code> your branch is already in
+   sync with GitHub and there is nothing to push — the error is a credentials
+   problem, not a missing commit.
+ </p>
+ <div class="codeblock">
+  <div class="cb-head">
+     <span class="cb-title">Check sync state</span>
+     <button class="copy" data-copy="push-check">COPY</button>
+  </div>
+ <pre id="push-check">cd "$HOME/Desktop/IndigenousGCS"
+ git fetch origin
+ git rev-list --left-right --count origin/main...main   <span class="c"># behind  ahead</span></pre>
+ </div>
+ <!-- ═══════ -->
+ <h2 id="first-run">4 · First Run</h2>
 
 <p>
   On launch you get a short splash, then the <strong>Dashboard</strong>. The app
