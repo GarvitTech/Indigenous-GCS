@@ -142,6 +142,7 @@ void FlightLogger::startLogging(const QString &vehicleId)
     }
     m_sessionId = q.lastInsertId().toLongLong();
     m_logging   = true;
+    m_lastNoVehicleWarnMs = -1;
     m_writeTimer.start();
     emit isLoggingChanged();
     emit loggingChanged();
@@ -285,7 +286,18 @@ void FlightLogger::onTelemetryUpdated()
     if (!m_vehicleManager) return;
 
     Vehicle *v = m_vehicleManager->activeVehicle();
-    if (!v || !v->telemetry()) return;
+    if (!v || !v->telemetry()) {
+        // Telemetry arrived but there is no active vehicle to attribute it to.
+        // Recording stays at zero rows in this state, so surface the reason
+        // once per second instead of leaving the user with a silent 0-row log.
+        if (m_lastNoVehicleWarnMs < 0 ||
+            QDateTime::currentMSecsSinceEpoch() - m_lastNoVehicleWarnMs >= 1000) {
+            m_lastNoVehicleWarnMs = QDateTime::currentMSecsSinceEpoch();
+            qCWarning(lcLog) << "Recording is active but no active vehicle is set; "
+                                "no telemetry can be logged. Connect a vehicle or start the simulator.";
+        }
+        return;
+    }
 
     const Telemetry *t = v->telemetry();
     const VehicleState &s = t->state();

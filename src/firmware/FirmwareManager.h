@@ -123,6 +123,8 @@ private:
     void appendCompileLog(const QString &text);
     void appendFlashLog(const QString &text);
     QString findArduinoCli() const;
+    // Returns a Python interpreter that can import esptool, or empty if none.
+    QString findPythonWithEsptool() const;
     // Built-in board list used when Arduino CLI is unavailable. Keeps the board
     // picker usable (ESP32 + common dev boards) without requiring the CLI.
     void applyFallbackBoards(const QString &reason);

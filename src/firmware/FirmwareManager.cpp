@@ -59,7 +59,14 @@ QString FirmwareManager::findArduinoCli() const
 
     QStringList candidates;
 #ifdef Q_OS_MACOS
-    candidates << "/Applications/Arduino IDE.app/Contents/Resources/app/lib/backend/arduino-cli"
+    // A GUI-launched .app receives a minimal PATH (/usr/bin:/bin:/usr/sbin:/sbin),
+    // so a Homebrew-installed arduino-cli at /opt/homebrew/bin (Apple Silicon) or
+    // /usr/local/bin (Intel) is invisible to findExecutable(). Probe those
+    // well-known locations explicitly so compile/flash works when the app is
+    // double-clicked, not only when launched from a terminal.
+    candidates << "/opt/homebrew/bin/arduino-cli"
+               << "/usr/local/bin/arduino-cli"
+               << "/Applications/Arduino IDE.app/Contents/Resources/app/lib/backend/arduino-cli"
                << QDir::homePath() + "/Applications/Arduino IDE.app/Contents/Resources/app/lib/backend/arduino-cli";
 #elif defined(Q_OS_WIN)
     const QString programFiles = qEnvironmentVariable("ProgramFiles");
@@ -86,6 +93,46 @@ QString FirmwareManager::findArduinoCli() const
 bool FirmwareManager::arduinoCliAvailable() const
 {
     return !findArduinoCli().isEmpty();
+}
+
+QString FirmwareManager::findPythonWithEsptool() const
+{
+    // Gather candidate interpreters. A GUI-launched .app has a minimal PATH that
+    // excludes Homebrew, so probe those locations explicitly as well.
+    QStringList candidates;
+    const QString onPath3 = QStandardPaths::findExecutable("python3");
+    if (!onPath3.isEmpty())
+        candidates << onPath3;
+#ifdef Q_OS_MACOS
+    candidates << "/opt/homebrew/bin/python3"
+               << "/usr/local/bin/python3"
+               << "/usr/bin/python3";
+#endif
+    const QString onPath = QStandardPaths::findExecutable("python");
+    if (!onPath.isEmpty())
+        candidates << onPath;
+
+    candidates.removeDuplicates();
+
+    for (const QString &candidate : candidates) {
+        if (candidate.isEmpty() || !QFileInfo(candidate).isExecutable())
+            continue;
+        // A bare `python3` that cannot import esptool would fail the flash with a
+        // confusing ModuleNotFoundError. Probe each interpreter so we hand the
+        // user the one that can actually flash.
+        QProcess probe;
+        probe.start(candidate, {"-c", "import esptool"});
+        if (!probe.waitForStarted(2000))
+            continue;
+        if (!probe.waitForFinished(5000)) {
+            probe.kill();
+            probe.waitForFinished(1000);
+            continue;
+        }
+        if (probe.exitStatus() == QProcess::NormalExit && probe.exitCode() == 0)
+            return candidate;
+    }
+    return {};
 }
 
 void FirmwareManager::setArduinoCliPath(const QString &path)
@@ -605,7 +652,7 @@ void FirmwareManager::flashBinary(const QString &binPath, const QString &port)
     emit flashLogChanged();
     emit flashProgressChanged();
 
-    QString python = QStandardPaths::findExecutable("python3");
+    QString python = findPythonWithEsptool();
     QStringList args;
 #ifdef Q_OS_WIN
     if (python.isEmpty()) {
@@ -614,11 +661,11 @@ void FirmwareManager::flashBinary(const QString &binPath, const QString &port)
             args << "-3";
     }
 #endif
-    if (python.isEmpty())
-        python = QStandardPaths::findExecutable("python");
     if (python.isEmpty()) {
-        appendFlashLog("[ERROR] Python 3 was not found. Install Python 3 and esptool (`python -m pip install esptool`).\n");
-        emit operationFailed("Python 3 is required to flash firmware. Install Python 3 and esptool.");
+        appendFlashLog("[ERROR] Python 3 with esptool was not found. Install it with:\n"
+                       "  python3 -m pip install esptool\n"
+                       "If esptool is installed for a different Python, set that interpreter on PATH.\n");
+        emit operationFailed("Python 3 with esptool is required to flash firmware. Install with `python3 -m pip install esptool`.");
         return;
     }
 

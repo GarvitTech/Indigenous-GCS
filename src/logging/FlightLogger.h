@@ -108,6 +108,9 @@ private:
     };
     QList<TelemetryRow> m_pending;
     int                 m_rowsWritten  = 0;
+    // Timestamp of the last "recording but no active vehicle" warning, so the
+    // message is throttled to once per second rather than on every sample.
+    qint64              m_lastNoVehicleWarnMs = -1;
 
     // Safety cap on the in-memory buffer. If the database stalls, the oldest
     // rows are dropped rather than letting memory grow unbounded during a
