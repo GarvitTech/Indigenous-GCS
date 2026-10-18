@@ -18,9 +18,30 @@ set -euo pipefail
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 BUILD_DIR="${BUILD_DIR:-$PROJECT_DIR/build}"
 
-TEST_BIN="$BUILD_DIR/bin/test_logging_integration"
+# The test executable has a .exe suffix on Windows and lives under a
+# per-configuration subdirectory when built with the Visual Studio generator,
+# so probe the same set of locations the build actually produces before
+# declaring the build missing.
+if [[ "$(uname)" == MINGW* || "$(uname)" == MSYS* || "$(uname)" == CYGWIN* ]]; then
+    _EXE=".exe"
+else
+    _EXE=""
+fi
 
-if [[ ! -x "$TEST_BIN" ]]; then
+TEST_BIN=""
+for _cand in \
+    "$BUILD_DIR/bin/test_logging_integration$_EXE" \
+    "$BUILD_DIR/bin/Release/test_logging_integration$_EXE" \
+    "$BUILD_DIR/bin/Debug/test_logging_integration$_EXE" \
+    "$BUILD_DIR/bin/test_logging_integration"
+do
+    if [[ -f "$_cand" ]]; then
+        TEST_BIN="$_cand"
+        break
+    fi
+done
+
+if [[ -z "$TEST_BIN" ]]; then
     echo "ERROR: $TEST_BIN not found. Build first:" >&2
     echo "  cmake -S \"$PROJECT_DIR\" -B \"$BUILD_DIR\" && cmake --build \"$BUILD_DIR\"" >&2
     exit 1
@@ -31,8 +52,24 @@ echo "==> Running the flight-logging integration test"
 
 DB="$HOME/Library/Application Support/IndigenousGCS/IndigenousGCS/flightlogs.db"
 if [[ "$(uname)" != "Darwin" ]]; then
-    # Windows: %LOCALAPPDATA%, Linux: XDG data dir. Only report if we can find it.
-    DB="$(find "$HOME" -name flightlogs.db -path '*IndigenousGCS*' 2>/dev/null | head -1 || true)"
+    # On Windows the app writes under %LOCALAPPDATA%\IndigenousGCS\IndigenousGCS
+    # and there is no reliable `find`; probe the documented locations directly
+    # first, then fall back to a find only where find exists.
+    _candidates=(
+        "${LOCALAPPDATA:-$HOME/AppData/Local}/IndigenousGCS/IndigenousGCS/flightlogs.db"
+        "${APPDATA:-$HOME/AppData/Roaming}/IndigenousGCS/IndigenousGCS/flightlogs.db"
+        "${XDG_DATA_HOME:-$HOME/.local/share}/IndigenousGCS/IndigenousGCS/flightlogs.db"
+    )
+    DB=""
+    for _cand in "${_candidates[@]}"; do
+        if [[ -f "$_cand" ]]; then
+            DB="$_cand"
+            break
+        fi
+    done
+    if [[ -z "$DB" ]] && command -v find >/dev/null 2>&1; then
+        DB="$(find "$HOME" -name flightlogs.db -path '*IndigenousGCS*' 2>/dev/null | head -1 || true)"
+    fi
 fi
 
 if [[ -n "$DB" && -f "$DB" ]]; then
