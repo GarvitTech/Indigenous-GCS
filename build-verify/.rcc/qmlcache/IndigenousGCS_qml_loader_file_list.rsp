@@ -1,0 +1,41 @@
+--resource
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/firmware_mavlink_headers.qrc
+--resource
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/user_guide.qrc
+--resource
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/qmake_IndigenousGCS.qrc
+--resource
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/IndigenousGCS_raw_qml_0.qrc
+--resource
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/IndigenousGCS_raw_res_0.qrc
+/qt/qml/IndigenousGCS/qml/Main.qml
+/qt/qml/IndigenousGCS/qml/pages/Dashboard.qml
+/qt/qml/IndigenousGCS/qml/pages/FlightData.qml
+/qt/qml/IndigenousGCS/qml/pages/MissionPlanner.qml
+/qt/qml/IndigenousGCS/qml/pages/Parameters.qml
+/qt/qml/IndigenousGCS/qml/pages/InavConfigurator.qml
+/qt/qml/IndigenousGCS/qml/pages/Settings.qml
+/qt/qml/IndigenousGCS/qml/pages/Calibration.qml
+/qt/qml/IndigenousGCS/qml/pages/VehicleSetup.qml
+/qt/qml/IndigenousGCS/qml/pages/Logs.qml
+/qt/qml/IndigenousGCS/qml/pages/Firmware.qml
+/qt/qml/IndigenousGCS/qml/pages/Simulation.qml
+/qt/qml/IndigenousGCS/qml/pages/Diagnostics.qml
+/qt/qml/IndigenousGCS/qml/components/TopBar.qml
+/qt/qml/IndigenousGCS/qml/components/SideBar.qml
+/qt/qml/IndigenousGCS/qml/components/StatusBar.qml
+/qt/qml/IndigenousGCS/qml/components/TelemetryCard.qml
+/qt/qml/IndigenousGCS/qml/components/IGButton.qml
+/qt/qml/IndigenousGCS/qml/components/VehicleStatus.qml
+/qt/qml/IndigenousGCS/qml/components/FlightModeSelector.qml
+/qt/qml/IndigenousGCS/qml/components/AttitudeIndicator.qml
+/qt/qml/IndigenousGCS/qml/components/Compass.qml
+/qt/qml/IndigenousGCS/qml/components/ArtificialHorizon.qml
+/qt/qml/IndigenousGCS/qml/components/AltitudeTape.qml
+/qt/qml/IndigenousGCS/qml/components/BatteryIndicator.qml
+/qt/qml/IndigenousGCS/qml/components/GPSIndicator.qml
+/qt/qml/IndigenousGCS/qml/components/ConnectionIndicator.qml
+/qt/qml/IndigenousGCS/qml/components/ConnectionPanel.qml
+/qt/qml/IndigenousGCS/qml/components/NotificationPanel.qml
+/qt/qml/IndigenousGCS/qml/theme/Theme.qml
+/qt/qml/IndigenousGCS/qml/theme/Colors.qml

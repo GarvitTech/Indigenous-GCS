@@ -1,0 +1,7 @@
+<RCC>
+  <qresource prefix="/qt/qml/IndigenousGCS/">
+    <file alias="resources/icons/app_icon.png">/Volumes/Garvit/Mission Planner/IndigenousGCS/resources/icons/app_icon.png</file>
+    <file alias="qml/theme/qmldir">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/theme/qmldir</file>
+  </qresource>
+</RCC>
+

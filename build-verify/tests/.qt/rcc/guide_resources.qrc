@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/docs">
+    <file alias="guide.html">/Volumes/Garvit/Mission Planner/IndigenousGCS/resources/docs/guide.html</file>
+  </qresource>
+</RCC>
+

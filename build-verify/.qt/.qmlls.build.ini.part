@@ -1,0 +1,3 @@
+[<SLASH>Volumes<SLASH>Garvit<SLASH>Mission Planner<SLASH>IndigenousGCS]
+importPaths="/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify:/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/IndigenousGCS:/opt/homebrew/share/qt/qml"
+resourceFiles="/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/firmware_mavlink_headers.qrc:/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/user_guide.qrc:/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/qmake_IndigenousGCS.qrc:/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/IndigenousGCS_raw_qml_0.qrc:/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/IndigenousGCS_raw_res_0.qrc"

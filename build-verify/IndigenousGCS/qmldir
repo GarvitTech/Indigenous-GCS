@@ -1,0 +1,36 @@
+module IndigenousGCS
+typeinfo IndigenousGCS.qmltypes
+prefer :/qt/qml/IndigenousGCS/
+Main 1.0 qml/Main.qml
+Dashboard 1.0 qml/pages/Dashboard.qml
+FlightData 1.0 qml/pages/FlightData.qml
+MissionPlanner 1.0 qml/pages/MissionPlanner.qml
+Parameters 1.0 qml/pages/Parameters.qml
+InavConfigurator 1.0 qml/pages/InavConfigurator.qml
+Settings 1.0 qml/pages/Settings.qml
+Calibration 1.0 qml/pages/Calibration.qml
+VehicleSetup 1.0 qml/pages/VehicleSetup.qml
+Logs 1.0 qml/pages/Logs.qml
+Firmware 1.0 qml/pages/Firmware.qml
+Simulation 1.0 qml/pages/Simulation.qml
+Diagnostics 1.0 qml/pages/Diagnostics.qml
+TopBar 1.0 qml/components/TopBar.qml
+SideBar 1.0 qml/components/SideBar.qml
+StatusBar 1.0 qml/components/StatusBar.qml
+TelemetryCard 1.0 qml/components/TelemetryCard.qml
+IGButton 1.0 qml/components/IGButton.qml
+VehicleStatus 1.0 qml/components/VehicleStatus.qml
+FlightModeSelector 1.0 qml/components/FlightModeSelector.qml
+AttitudeIndicator 1.0 qml/components/AttitudeIndicator.qml
+Compass 1.0 qml/components/Compass.qml
+ArtificialHorizon 1.0 qml/components/ArtificialHorizon.qml
+AltitudeTape 1.0 qml/components/AltitudeTape.qml
+BatteryIndicator 1.0 qml/components/BatteryIndicator.qml
+GPSIndicator 1.0 qml/components/GPSIndicator.qml
+ConnectionIndicator 1.0 qml/components/ConnectionIndicator.qml
+ConnectionPanel 1.0 qml/components/ConnectionPanel.qml
+NotificationPanel 1.0 qml/components/NotificationPanel.qml
+Theme 1.0 qml/theme/Theme.qml
+Colors 1.0 qml/theme/Colors.qml
+depends QtQuick
+

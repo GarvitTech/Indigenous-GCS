@@ -1,0 +1,50 @@
+--bare
+-I
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify
+-I
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/IndigenousGCS
+-I
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify
+-I
+/opt/homebrew/share/qt/qml
+--resource
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/firmware_mavlink_headers.qrc
+--resource
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/user_guide.qrc
+--resource
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/qmake_IndigenousGCS.qrc
+--resource
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/IndigenousGCS_raw_qml_0.qrc
+--resource
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/IndigenousGCS_raw_res_0.qrc
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/Main.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/Dashboard.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/FlightData.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/MissionPlanner.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/Parameters.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/InavConfigurator.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/Settings.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/Calibration.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/VehicleSetup.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/Logs.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/Firmware.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/Simulation.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/Diagnostics.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/TopBar.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/SideBar.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/StatusBar.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/TelemetryCard.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/IGButton.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/VehicleStatus.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/FlightModeSelector.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/AttitudeIndicator.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/Compass.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/ArtificialHorizon.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/AltitudeTape.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/BatteryIndicator.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/GPSIndicator.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/ConnectionIndicator.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/ConnectionPanel.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/NotificationPanel.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/theme/Theme.qml
+/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/theme/Colors.qml

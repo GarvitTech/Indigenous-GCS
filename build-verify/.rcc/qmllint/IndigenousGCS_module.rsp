@@ -1,0 +1,20 @@
+-I
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify
+-I
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/IndigenousGCS
+-I
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify
+-I
+/opt/homebrew/share/qt/qml
+--resource
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/firmware_mavlink_headers.qrc
+--resource
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/user_guide.qrc
+--resource
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/qmake_IndigenousGCS.qrc
+--resource
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/IndigenousGCS_raw_qml_0.qrc
+--resource
+/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/.qt/rcc/IndigenousGCS_raw_res_0.qrc
+--module
+IndigenousGCS

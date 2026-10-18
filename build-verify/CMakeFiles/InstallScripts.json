@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/cmake_install.cmake",
+		"/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/tests/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

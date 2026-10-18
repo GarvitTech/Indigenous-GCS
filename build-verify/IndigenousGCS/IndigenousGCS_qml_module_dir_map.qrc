@@ -1,0 +1,6 @@
+<RCC>
+  <qresource prefix="/">
+    <file alias="/qt/qml/IndigenousGCS">/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/IndigenousGCS</file>
+
+  </qresource>
+</RCC>

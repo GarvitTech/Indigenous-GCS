@@ -1,0 +1,36 @@
+<RCC>
+  <qresource prefix="/qt/qml/IndigenousGCS/">
+    <file alias="qml/Main.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/Main.qml</file>
+    <file alias="qml/pages/Dashboard.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/Dashboard.qml</file>
+    <file alias="qml/pages/FlightData.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/FlightData.qml</file>
+    <file alias="qml/pages/MissionPlanner.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/MissionPlanner.qml</file>
+    <file alias="qml/pages/Parameters.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/Parameters.qml</file>
+    <file alias="qml/pages/InavConfigurator.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/InavConfigurator.qml</file>
+    <file alias="qml/pages/Settings.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/Settings.qml</file>
+    <file alias="qml/pages/Calibration.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/Calibration.qml</file>
+    <file alias="qml/pages/VehicleSetup.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/VehicleSetup.qml</file>
+    <file alias="qml/pages/Logs.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/Logs.qml</file>
+    <file alias="qml/pages/Firmware.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/Firmware.qml</file>
+    <file alias="qml/pages/Simulation.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/Simulation.qml</file>
+    <file alias="qml/pages/Diagnostics.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/pages/Diagnostics.qml</file>
+    <file alias="qml/components/TopBar.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/TopBar.qml</file>
+    <file alias="qml/components/SideBar.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/SideBar.qml</file>
+    <file alias="qml/components/StatusBar.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/StatusBar.qml</file>
+    <file alias="qml/components/TelemetryCard.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/TelemetryCard.qml</file>
+    <file alias="qml/components/IGButton.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/IGButton.qml</file>
+    <file alias="qml/components/VehicleStatus.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/VehicleStatus.qml</file>
+    <file alias="qml/components/FlightModeSelector.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/FlightModeSelector.qml</file>
+    <file alias="qml/components/AttitudeIndicator.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/AttitudeIndicator.qml</file>
+    <file alias="qml/components/Compass.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/Compass.qml</file>
+    <file alias="qml/components/ArtificialHorizon.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/ArtificialHorizon.qml</file>
+    <file alias="qml/components/AltitudeTape.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/AltitudeTape.qml</file>
+    <file alias="qml/components/BatteryIndicator.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/BatteryIndicator.qml</file>
+    <file alias="qml/components/GPSIndicator.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/GPSIndicator.qml</file>
+    <file alias="qml/components/ConnectionIndicator.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/ConnectionIndicator.qml</file>
+    <file alias="qml/components/ConnectionPanel.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/ConnectionPanel.qml</file>
+    <file alias="qml/components/NotificationPanel.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/components/NotificationPanel.qml</file>
+    <file alias="qml/theme/Theme.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/theme/Theme.qml</file>
+    <file alias="qml/theme/Colors.qml">/Volumes/Garvit/Mission Planner/IndigenousGCS/qml/theme/Colors.qml</file>
+  </qresource>
+</RCC>
+

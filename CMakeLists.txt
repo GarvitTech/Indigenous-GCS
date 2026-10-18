@@ -166,11 +166,16 @@ install(TARGETS IndigenousGCS
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
-if(QT_VERSION VERSION_GREATER_EQUAL "6.5")
-    qt_generate_deploy_qml_app_script(
+# NOTE: `qt_generate_deploy_qml_app_script` does NOT exist in Qt 6.5+; it was
+# an early 6.0-era API and was removed. The supported command is
+# `qt_generate_deploy_app_script`, which deploys the QML runtime automatically
+# when the target links Qt6::Qml/Quick.
+if(QT_VERSION VERSION_GREATER_EQUAL "6.3")
+    qt_generate_deploy_app_script(
         TARGET IndigenousGCS
         OUTPUT_SCRIPT IndigenousGCS_deploy_script
         NO_TRANSLATIONS
+        NO_UNSUPPORTED_PLATFORM_ERROR
     )
     install(SCRIPT ${IndigenousGCS_deploy_script})
 endif()

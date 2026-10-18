@@ -1,0 +1,154 @@
+{
+	"BUILD_DIR" : "/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/tests/test_mavlink_autogen",
+	"CMAKE_BINARY_DIR" : "/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify",
+	"CMAKE_CURRENT_BINARY_DIR" : "/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/tests",
+	"CMAKE_CURRENT_SOURCE_DIR" : "/Volumes/Garvit/Mission Planner/IndigenousGCS/tests",
+	"CMAKE_EXECUTABLE" : "/opt/homebrew/bin/cmake",
+	"CMAKE_LIST_FILES" : 
+	[
+		"/Volumes/Garvit/Mission Planner/IndigenousGCS/tests/CMakeLists.txt",
+		"/opt/homebrew/lib/cmake/Qt6/Qt6ConfigVersion.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/Qt6ConfigVersionImpl.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/Qt6Config.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicCMakeIncludeGuardHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicCMakeEarlyPolicyHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicCMakeHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/Qt6ConfigExtras.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicCMakeVersionHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtInstallPaths.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/Qt6TargetsPrecheck.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtFeature.cmake",
+		"/opt/homebrew/share/cmake/Modules/CheckCXXCompilerFlag.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtFeatureCommon.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicAndroidHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicAppleHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicCMakeHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicCMakeVersionHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicDependencyHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicExternalProjectHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicFinalizerHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicFindPackageHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicGitHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicJsonHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicPluginHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicPluginHelpers_v2.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomAttributionHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomBuildToolHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomCommonGenerationHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomCpeHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomCycloneDXHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomDocumentNamespaceHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomDepHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomExternalReferenceHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomFileHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomGenerationHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomGenerationCycloneDXHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomLicenseHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomOpsHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomPurlHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomPythonHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomQtEntityHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomRelationshipHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicSbomSystemDepHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicTargetHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicTestHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicToolHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicWalkLibsHelpers.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/QtPublicWindowsHelpers.cmake",
+		"/opt/homebrew/share/cmake/Modules/CMakeFindDependencyMacro.cmake",
+		"/opt/homebrew/lib/cmake/Qt6/Qt6Dependencies.cmake",
+		"/opt/homebrew/lib/cmake/Qt6Core/Qt6CoreConfigureFileTemplate.in"
+	],
+	"CMAKE_SOURCE_DIR" : "/Volumes/Garvit/Mission Planner/IndigenousGCS",
+	"CROSS_CONFIG" : false,
+	"DEP_FILE" : "/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/tests/test_mavlink_autogen/deps",
+	"DEP_FILE_RULE_NAME" : "test_mavlink_autogen/timestamp",
+	"HEADERS" : [],
+	"HEADER_EXTENSIONS" : [ "h", "hh", "h++", "hm", "hpp", "hxx", "in", "txx" ],
+	"INCLUDE_DIR" : "/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/tests/test_mavlink_autogen/include",
+	"MOC_COMPILATION_FILE" : "/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/tests/test_mavlink_autogen/mocs_compilation.cpp",
+	"MOC_DEFINITIONS" : 
+	[
+		"QT_CORE_LIB",
+		"QT_NO_DEBUG",
+		"QT_TESTCASE_BUILDDIR=\"/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/tests\"",
+		"QT_TESTCASE_SOURCEDIR=\"/Volumes/Garvit/Mission Planner/IndigenousGCS/tests\"",
+		"QT_TESTLIB_LIB"
+	],
+	"MOC_DEPEND_FILTERS" : 
+	[
+		[
+			"Q_PLUGIN_METADATA",
+			"[\n][ \t]*Q_PLUGIN_METADATA[ \t]*\\([^\\)]*FILE[ \t]*\"([^\"]+)\""
+		]
+	],
+	"MOC_INCLUDES" : 
+	[
+		"/Volumes/Garvit/Mission Planner/IndigenousGCS/src",
+		"/Volumes/Garvit/Mission Planner/IndigenousGCS",
+		"/opt/homebrew/lib/QtCore.framework/Headers",
+		"/opt/homebrew/lib/QtCore.framework",
+		"/opt/homebrew/share/qt/mkspecs/macx-clang",
+		"/opt/homebrew/include",
+		"/opt/homebrew/lib/QtTest.framework/Headers",
+		"/opt/homebrew/lib/QtTest.framework",
+		"/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1",
+		"/Library/Developer/CommandLineTools/usr/lib/clang/21/include",
+		"/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include",
+		"/Library/Developer/CommandLineTools/usr/include"
+	],
+	"MOC_MACRO_NAMES" : 
+	[
+		"Q_OBJECT",
+		"Q_GADGET",
+		"Q_NAMESPACE",
+		"Q_NAMESPACE_EXPORT",
+		"Q_GADGET_EXPORT",
+		"Q_ENUM_NS"
+	],
+	"MOC_OPTIONS" : [],
+	"MOC_PATH_PREFIX" : false,
+	"MOC_PREDEFS_CMD" : 
+	[
+		"/usr/bin/c++",
+		"-std=c++17",
+		"-w",
+		"-dM",
+		"-E",
+		"/opt/homebrew/share/cmake/Modules/CMakeCXXCompilerABI.cpp"
+	],
+	"MOC_PREDEFS_FILE" : "/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/tests/test_mavlink_autogen/moc_predefs.h",
+	"MOC_RELAXED_MODE" : false,
+	"MOC_SKIP" : 
+	[
+		"/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/tests/.qt/rcc/qrc_guide_resources.cpp",
+		"/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/tests/test_geo_autogen/mocs_compilation.cpp"
+	],
+	"MULTI_CONFIG" : false,
+	"PARALLEL" : 10,
+	"PARSE_CACHE_FILE" : "/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/tests/CMakeFiles/test_mavlink_autogen.dir/ParseCache.txt",
+	"QT_MOC_EXECUTABLE" : "/opt/homebrew/share/qt/libexec/moc",
+	"QT_UIC_EXECUTABLE" : "",
+	"QT_VERSION_MAJOR" : 6,
+	"QT_VERSION_MINOR" : 11,
+	"SETTINGS_FILE" : "/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/tests/CMakeFiles/test_mavlink_autogen.dir/AutogenUsed.txt",
+	"SOURCES" : 
+	[
+		[
+			"/Volumes/Garvit/Mission Planner/IndigenousGCS/tests/test_mavlink/test_mavlink.cpp",
+			"MU",
+			null
+		]
+	],
+	"UIC_OPTIONS" : [],
+	"UIC_SEARCH_PATHS" : [],
+	"UIC_SKIP" : 
+	[
+		"/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/tests/.qt/rcc/qrc_guide_resources.cpp",
+		"/Volumes/Garvit/Mission Planner/IndigenousGCS/build-verify/tests/test_geo_autogen/mocs_compilation.cpp"
+	],
+	"UIC_UI_FILES" : [],
+	"USE_BETTER_GRAPH" : true,
+	"VERBOSITY" : 0
+}
